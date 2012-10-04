@@ -1,0 +1,95 @@
+/**
+ ******************************************************************************
+ **	FILE NAME : nxtway_gs.oil
+ **
+ **	ABSTRUCT  : OSEK OIL(OSEK Implementation Language) file for NXTway-GS
+ ******************************************************************************
+ **/
+#include "implementation.oil"
+
+CPU ATMEL_AT91SAM7S256
+{
+  OS LEJOS_OSEK
+  {
+    STATUS = EXTENDED;
+    STARTUPHOOK = FALSE;
+    SHUTDOWNHOOK = FALSE;
+    PRETASKHOOK = FALSE;
+    POSTTASKHOOK = FALSE;
+    USEGETSERVICEID = FALSE;
+    USEPARAMETERACCESS = FALSE;
+    USERESSCHEDULER = FALSE;
+  };
+
+  /* Definition of application mode */
+  APPMODE appmode1{};
+
+  /* Definitions of a periodical task: OSEK_Task_ts1 */
+  TASK OSEK_Task_ts1
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 3;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* bytes */
+  };
+  ALARM OSEK_Alarm_task_ts1
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+      TASK = OSEK_Task_ts1;
+    };
+    AUTOSTART = TRUE
+    {
+      APPMODE = appmode1;
+      ALARMTIME = 1;
+      CYCLETIME = 4;
+    };
+  };
+  
+  /* Definitions of a periodical task: OSEK_Task_ts2 */
+  TASK OSEK_Task_ts2
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 2;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* bytes */
+  };
+  ALARM OSEK_Alarm_task_ts2
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+      TASK = OSEK_Task_ts2;
+    };
+    AUTOSTART = TRUE
+    {
+      APPMODE = appmode1;
+      ALARMTIME = 1;
+      CYCLETIME = 40;
+    };
+  };
+  
+  /* Definition of background task: OSEK_Task_Background */
+  TASK OSEK_Task_Background
+  {
+    AUTOSTART = TRUE
+    {
+      APPMODE = appmode1;
+    };
+    PRIORITY = 1; /* lowest priority */
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* bytes */
+  };
+  
+  /* Definition of OSEK Alarm counter: SysTimerCnt */
+  COUNTER SysTimerCnt
+  {
+    MINCYCLE = 1;
+    MAXALLOWEDVALUE = 10000;
+    TICKSPERBASE = 1;
+  };
+};

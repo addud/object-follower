@@ -1,0 +1,112 @@
+# This file contains a list of special signatures for
+# methods used by the VM.
+
+# The VM will index these special signatures based on their
+# order here. Rebuild the VM if this file changes.
+
+# Indices start at 0.
+
+#--------------------------------------
+# Methods invoked by the VM
+#--------------------------------------
+
+main([Ljava/lang/String;)V
+run()V
+<init>()V
+<clinit>()V
+
+#--------------------------------------
+# Native methods
+#--------------------------------------
+
+# java.lang.Object
+notify()V
+notifyAll()V
+wait()V
+wait(J)V
+
+# java.lang.Thread
+start()V
+yield()V
+sleep(J)V
+currentThread()Ljava/lang/Thread;
+getPriority()I
+setPriority(I)V
+interrupt()V
+interrupted()Z
+isInterrupted()Z
+setDaemon(Z)V
+isDaemon()Z
+join()V
+join(J)V
+
+# java.lang.System
+#arraycopy(Ljava/lang/Object;ILjava/lang/Object;II)V
+currentTimeMillis()J
+exit(I)V
+
+# java.lang.Runtime
+freeMemory()J
+totalMemory()J
+
+# java.lang.Throwable
+getMessage()Ljava/lang/String;
+
+# lejos.nxt.SensorPort
+readSensorValue(I)I
+setADTypeById(II)V
+setPowerTypeById(II)V
+
+# lejos.nxt.Poller
+setPoller()V
+setThrottle(I)V
+
+# josx.util.Assertion
+test(Ljava/lang/String;Z)V
+testEQ(Ljava/lang/String;II)V
+
+# java.lang.Float
+floatToIntBits(F)I
+intBitsToFloat(I)F
+
+#lejos.nxt.LCD
+drawString(Ljava/lang/String;II)V
+drawInt(III)V
+drawInt(IIII)V
+refresh()V
+clear()V
+setDisplay([I)V
+
+#lejos.nxt.Battery
+getVoltageMilliVolt()I
+
+#lejos.nxt.Button
+readButtons()I
+
+#lejos.nxt.MotorPort
+getTachoCountById(I)I
+controlMotorById(III)V
+resetTachoCountById(I)V
+
+#lejos.nxt.SensorPort
+i2cEnableById(I)V
+i2cBusyById(I)I
+i2cStartById(IIII[BII)I
+i2cDisableById(I)V
+
+#lejos.nxt.Sound
+playTone(II)V
+
+#lejos.Bluetooth
+btSend([BI)V
+btReceive([B)V
+btGetCmdMode()I
+btSetCmdMode(I)V
+btStartADConverter()V
+
+
+
+
+
+
+

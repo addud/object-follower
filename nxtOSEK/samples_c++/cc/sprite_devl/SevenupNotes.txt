@@ -1,0 +1,46 @@
+not having to hit the INV button everytime
+having a slider for animations
+having a thumbnail of the animation frames
+
+lcd pixel width 100
+lcd pixel heigh 64
+
+char input 8x8 all black char
+
+SINT Screen::spr2BufferPos(U8 *lcd, const char *sprite, S32 width, S32 height, S32 xPos, S32 yPos)
+{
+	for(int i = 0; i < height; ++i)
+	{
+		for(int j = 0; j < width; ++j)
+		{
+			int realX = xpos + j;
+			int realY = ypos + i;
+			
+			if(realX < 0 || realX > lcd_width)
+				continue;
+				
+			if(realY < 0 || realY > lcd_height)
+				continue;
+				
+			int spritePixel = j + (i * width);
+			
+			int spriteByte = spritePixel / 8;
+			int spriteBytePixel = spritePixel % 8;
+			if(spriteBytePixel)
+				spriteByte++;
+				
+			char spriteChar = sprite[spriteByte]
+			
+			int lcdPixel = realX + ((realY)*lcd_width);
+			int lcdByte = lcdPixel / 8;
+			int lcdBytePixel = lcdPixel % 8;
+			if(lcdBytePixel)
+				lcdByte++;
+			
+			if(spriteChar & (1<<spriteBytePixel))
+			{
+				lcd[lcdByte] |=  (0x80 >> lcdBytePixel);
+			}
+		}
+	}
+}

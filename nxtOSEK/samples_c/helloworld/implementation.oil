@@ -1,0 +1,8 @@
+OIL_VERSION = "2.5";
+
+IMPLEMENTATION Standard {
+
+	#include <impl_os_ecc2.oil>
+
+};
+

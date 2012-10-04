@@ -1,0 +1,120 @@
+#include "implementation.oil"
+
+CPU ATMEL_AT91SAM7S256
+{
+  OS LEJOS_OSEK
+  {
+    STATUS = EXTENDED;
+    STARTUPHOOK = FALSE;
+    ERRORHOOK = FALSE;
+    SHUTDOWNHOOK = FALSE;
+    PRETASKHOOK = FALSE;
+    POSTTASKHOOK = FALSE;
+    USEGETSERVICEID = FALSE;
+    USEPARAMETERACCESS = FALSE;
+    USERESSCHEDULER = FALSE;
+  };
+
+  /* Definition of application mode */
+  APPMODE appmode1{}; 
+
+  EVENT SleepEventMask
+  {
+    MASK = AUTO;
+  };
+
+  RESOURCE ResourceCommand
+  {
+  	RESOURCEPROPERTY = STANDARD;
+  };
+
+  /* Definition of Task_Init */
+  TASK Task_Init
+  {
+    AUTOSTART = TRUE
+	{
+		APPMODE = appmode1;
+   	};
+    PRIORITY = 4;
+    EVENT = SleepEventMask;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */ 
+  };
+
+  /* Definition of Task_Commander */
+  TASK Task_Commander
+  {
+    AUTOSTART = FALSE;
+    RESOURCE = ResourceCommand; 
+    PRIORITY = 3;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */
+  };
+
+  /* Definition of Task_Display */
+  TASK Task_Display
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 2;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */ 
+  };
+
+  /* Definition of Task_MotionControl */
+  TASK Task_MotionControl
+  {
+    AUTOSTART = TRUE
+    {
+      APPMODE = appmode1;
+    };
+    EVENT = SleepEventMask;
+    RESOURCE = ResourceCommand; 
+    PRIORITY = 1;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512;
+  };
+
+  /* Definition of Task_Commander execution timing */
+  ALARM cyclic_alarm_Task_Commander
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = Task_Commander;
+    };
+    AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 5; /* executed every 5msec */
+        APPMODE = appmode1;
+    };
+  };
+  
+  /* Definition of Task_Display execution timing */
+  ALARM cyclic_alarm_Task_Display
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = Task_Display;
+    };
+    AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 500; /* executed every 500msec */
+        APPMODE = appmode1;
+    };
+  };
+
+  /* Definition of OSEK Alarm Counter */
+  COUNTER SysTimerCnt
+  {
+    MINCYCLE = 1;
+    MAXALLOWEDVALUE = 10000;
+    TICKSPERBASE = 1; /* One tick is equal to 1msec */ 
+  };
+};

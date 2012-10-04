@@ -1,0 +1,70 @@
+#include "implementation.oil"
+
+CPU ATMEL_AT91SAM7S256
+{
+	OS LEJOS_OSEK
+  	{
+    	STATUS = EXTENDED;
+    	STARTUPHOOK = FALSE;
+    	ERRORHOOK = FALSE;
+    	SHUTDOWNHOOK = FALSE;
+    	PRETASKHOOK = FALSE;
+    	POSTTASKHOOK = FALSE;
+    	USEGETSERVICEID = FALSE;
+    	USEPARAMETERACCESS = FALSE;
+    	USERESSCHEDULER = FALSE;
+  	};
+  
+  	APPMODE sample_appmode1{};
+  
+  	RESOURCE lcd
+	{
+  		RESOURCEPROPERTY = STANDARD;
+  	};
+
+  	TASK LowTask
+  	{
+    	AUTOSTART = TRUE 
+		{
+    		APPMODE = sample_appmode1;
+    	};
+    	PRIORITY = 1;
+    	ACTIVATION = 1;
+    	SCHEDULE = FULL;
+    	STACKSIZE = 500;
+    	RESOURCE = lcd;
+  	};
+
+  	TASK HighTask
+  	{
+    	AUTOSTART = FALSE;
+    	SCHEDULE = FULL;
+    	PRIORITY = 2;
+    	ACTIVATION = 1;
+    	STACKSIZE = 500;
+    	RESOURCE = lcd;
+  	};
+
+  	COUNTER SysTimerCnt
+	{ 
+    	MINCYCLE = 1;
+    	MAXALLOWEDVALUE = 10000; 
+    	TICKSPERBASE = 1; 
+  	};
+
+  	ALARM HighTaskAlarm
+	{ 
+    	COUNTER = SysTimerCnt;
+    	ACTION = ACTIVATETASK
+		{
+      		TASK = HighTask;
+    	};
+    	AUTOSTART = TRUE 
+    	{
+      		APPMODE = sample_appmode1;
+      		ALARMTIME = 3000; 
+      		CYCLETIME = 1000;
+    	};
+  	};
+};
+

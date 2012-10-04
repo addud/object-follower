@@ -1,0 +1,182 @@
+<?xml version='1.0' encoding='utf-8'?>
+<?xml-stylesheet href='./slwebview.css' type='text/css' ?>
+<svg xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' zoomAndPan='disable' onload='initialize(evt)'>
+  <script type='text/javascript' xlink:href='./slwebview.js' />
+  <script type='text/javascript' xlink:href='./id_mapping.js' />
+  <rect id='keyEventBackingScrim' pointer-events='all' x='0' y='0' width='100%' height='100%' fill='none' stroke='none' />
+  <g id='group.canvas' transform='translate(0,30)'>
+    <!-- Layers will be added here -->
+  </g>
+  <g id='thumbnail.canvas' transform='translate(0,30)'>
+    <!--Thumbnails go there -->
+  </g>
+  <rect id='zoomBoxRectangle' x='0' y='0' height='0' width='0' stroke='black' fill='none' style='stroke-dasharray: 1, 1;stroke: black; stroke-width: 1;' visible='none'/>
+  <defs>
+    <filter id='drop-shadow'>
+      <feGaussianBlur in='SourceAlpha' stdDeviation='5' result='blur' />
+      <feOffset in='blur' dx='4' dy='4' result='offsetBlur' />
+      <feMerge>
+        <feMergeNode in='offsetBlur' />
+        <feMergeNode in='SourceGraphic' />
+      </feMerge>
+    </filter>
+    <filter id='highlight'>
+      <feColorMatrix type='matrix' values=' 0 0 0 0 0 0 0 0 0.9 0 0 0 0 0.9 0 0 0 0 1.0 0' />
+      <feGaussianBlur stdDeviation='3' result='coloredBlur' />
+      <feMerge>
+        <feMergeNode in='coloredBlur' />
+        <feMergeNode in='SourceGraphic' />
+      </feMerge>
+    </filter>
+  </defs>
+  <g id='group.navCommands'>
+    <g id='prop.navHelp' display='none' opacity='.97' transform='translate(18,18 )' stroke='none' fill='black' onmouseover='displayTarget(evt)' onmouseout='dismissTarget(evt)' font-size='12'>
+      <rect x='0' y='0' height='300' width='180' stroke='black' fill='white' filter='url(#drop-shadow)' />
+      <switch>
+        <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='5' y='12' fill='black' stroke='none'>&#12490;&#12499;&#12466;&#12540;&#12471;&#12519;&#12531;&#12467;&#12510;&#12531;&#12489;</text>
+        <text x='5' y='12' fill='black' stroke='none'>Navigation Commands</text>
+      </switch>
+      <g onmouseover='highlightHelpKey(evt,"E")' onmouseout='unhighlightHelpKey(evt,"E")'>
+        <rect id='helpkey.E' onclick='panUp(evt)' x='3' y='21' width='18' height='18' rx='3' ry='3' fill='#eee' stroke='black' />
+        <text x='12' y='36' text-anchor='middle' font-weight='bold' pointer-events='none'>E</text>
+        <switch>
+          <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='24' y='36'>&#19978;&#12408;&#31227;&#21205;</text>
+          <text x='24' y='36'>Pan up</text>
+        </switch>
+      </g>
+      <g onmouseover='highlightHelpKey(evt,"C")' onmouseout='unhighlightHelpKey(evt,"C")'>
+        <rect id='helpkey.C' onclick='panDown(evt)' x='3' y='45' width='18' height='18' rx='3' ry='3' fill='#eee' stroke='black' />
+        <text x='12' y='60' text-anchor='middle' font-weight='bold' pointer-events='none'>C</text>
+        <switch>
+          <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='24' y='60'>&#19979;&#12408;&#31227;&#21205;</text>
+          <text x='24' y='60'>Pan down</text>
+        </switch>
+      </g>
+      <g onmouseover='highlightHelpKey(evt,"D")' onmouseout='unhighlightHelpKey(evt,"D")'>
+        <rect id='helpkey.D' onclick='panLeft(evt)' x='3' y='69' width='18' height='18' rx='3' ry='3' fill='#eee' stroke='black' />
+        <text x='12' y='84' text-anchor='middle' font-weight='bold' pointer-events='none'>D</text>
+        <switch>
+          <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='24' y='84'>&#24038;&#12408;&#31227;&#21205;</text>
+          <text x='24' y='84'>Pan left</text>
+        </switch>
+      </g>
+      <g onmouseover='highlightHelpKey(evt,"G")' onmouseout='unhighlightHelpKey(evt,"G")'>
+        <rect id='helpkey.G' onclick='panRight(evt)' x='3' y='93' width='18' height='18' rx='3' ry='3' fill='#eee' stroke='black' />
+        <text x='12' y='108' text-anchor='middle' font-weight='bold' pointer-events='none'>G</text>
+        <switch>
+          <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='24' y='108'>&#21491;&#12408;&#31227;&#21205;</text>
+          <text x='24' y='108'>Pan right</text>
+        </switch>
+      </g>
+      <g onmouseover='highlightHelpKey(evt,"P")' onmouseout='unhighlightHelpKey(evt,"P")'>
+        <rect id='helpkey.P' onclick='toggleMousePanScrim(evt)' x='3' y='117' width='18' height='18' rx='3' ry='3' fill='#eee' stroke='black' />
+        <text x='12' y='132' text-anchor='middle' font-weight='bold' pointer-events='none'>P</text>
+        <switch>
+          <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='24' y='132'>&#12510;&#12454;&#12473;&#12391;&#31227;&#21205;</text>
+          <text x='24' y='132'>Pan with mouse</text>
+        </switch>
+      </g>
+      <g onmouseover='highlightHelpKey(evt,"F")' onmouseout='unhighlightHelpKey(evt,"F")'>
+        <rect id='helpkey.F' onclick='fillScreen(evt)' x='3' y='153' width='18' height='18' rx='3' ry='3' fill='#eee' stroke='black' />
+        <text x='12' y='168' text-anchor='middle' font-weight='bold' pointer-events='none'>F</text>
+        <switch>
+          <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='24' y='168'>&#12501;&#12523;&#12473;&#12463;&#12522;&#12540;&#12531;&#12395;&#25313;&#22823;</text>
+          <text x='24' y='168'>Zoom to full screen</text>
+        </switch>
+      </g>
+      <g onmouseover='highlightHelpKey(evt,"1")' onmouseout='unhighlightHelpKey(evt,"1")'>
+        <rect id='helpkey.1' onclick='zoomNormal(evt)' x='3' y='177' width='18' height='18' rx='3' ry='3' fill='#eee' stroke='black' />
+        <text x='12' y='192' text-anchor='middle' font-weight='bold' pointer-events='none'>1</text>
+        <switch>
+          <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='24' y='192'>100% &#12395;&#25313;&#22823;</text>
+          <text x='24' y='192'>Zoom to 100%</text>
+        </switch>
+      </g>
+      <g onmouseover='highlightHelpKey(evt,"R")' onmouseout='unhighlightHelpKey(evt,"R")'>
+        <rect id='helpkey.R' onclick='zoomIn(evt)' x='3' y='201' width='18' height='18' rx='3' ry='3' fill='#eee' stroke='black' />
+        <text x='12' y='216' text-anchor='middle' font-weight='bold' pointer-events='none'>R</text>
+        <switch>
+          <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='24' y='216'>&#12474;&#12540;&#12512; &#12452;&#12531;</text>
+          <text x='24' y='216'>Zoom in</text>
+        </switch>
+      </g>
+      <g onmouseover='highlightHelpKey(evt,"V")' onmouseout='unhighlightHelpKey(evt,"V")'>
+        <rect id='helpkey.V' onclick='zoomOut(evt)' x='3' y='225' width='18' height='18' rx='3' ry='3' fill='#eee' stroke='black' />
+        <text x='12' y='240' text-anchor='middle' font-weight='bold' pointer-events='none'>V</text>
+        <switch>
+          <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='24' y='240'>&#12474;&#12540;&#12512; &#12450;&#12454;&#12488;</text>
+          <text x='24' y='240'>Zoom out</text>
+        </switch>
+      </g>
+      <g onmouseover='highlightHelpKey(evt,"X")' onmouseout='unhighlightHelpKey(evt,"X")'>
+        <rect id='helpkey.X' onclick='toggleExpose(evt)' x='3' y='261' width='18' height='18' rx='3' ry='3' fill='#eee' stroke='black' />
+        <text x='12' y='276' text-anchor='middle' font-weight='bold' pointer-events='none'>X</text>
+        <switch>
+          <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='24' y='276'>&#12377;&#12409;&#12390;&#12398;&#12524;&#12452;&#12516;&#12540;&#12434;&#34920;&#31034;</text>
+          <text x='24' y='276'>Show all layers</text>
+        </switch>
+      </g>
+    </g>
+    <g id='navHelp' display='inline' fill='none' transform='translate(15,15 )' stroke='rgb(0,0,0)' stroke-width='1.5' onmouseover='showProp(evt)' onmouseout='hideProp(evt)' font-size='12'>
+      <circle cx='0' cy='0' r='10' pointer-events='all' />
+      <text x='0' y='3' stroke='none' fill='black' text-anchor='middle' font-weight='bold' pointer-events='none'>?</text>
+    </g>
+    <g id='prop.navHome' display='none' opacity='.97' transform='translate(45,25 )' onmouseover='displayTarget(evt)' onmouseout='dismissTarget(evt)' font-size='12'>
+      <rect x='0' y='0' height='18' width='100' stroke='black' fill='white' filter='url(#drop-shadow)' />
+      <switch>
+        <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='5' y='12' fill='black' stroke='none'>&#12507;&#12540;&#12512;&#12434;&#34920;&#31034;</text>
+        <text x='5' y='12' fill='black' stroke='none'>View home</text>
+      </switch>
+    </g>
+    <g id='navHome' fill='none' transform='translate(40,15 )' stroke='rgb(0,0,0)' stroke-width='1.5' onclick='changeSysHome(evt)' onmouseover='showProp(evt);highlight(evt,1)' onmouseout='hideProp(evt);unhighlight(evt,1)'>
+      <circle cx='0' cy='0' r='10' pointer-events='all' />
+      <polygon points='-2.5,-1 2.5,-1 0,-6' pointer-events='none' />
+      <polygon points='-2.5,6 2.5,6 0,1' pointer-events='none' />
+    </g>
+    <g id='prop.navPrev' display='none' opacity='.97' transform='translate(70,25 )' onmouseover='displayTarget(evt)' onmouseout='dismissTarget(evt)' font-size='12'>
+      <rect x='0' y='0' height='18' width='100' fill='white' stroke='black' filter='url(#drop-shadow)' />
+      <switch>
+        <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='5' y='12' fill='black' stroke='none'>&#21069;&#12434;&#34920;&#31034;</text>
+        <text x='5' y='12' fill='black' stroke='none'>View previous</text>
+      </switch>
+    </g>
+    <g id='navPrev' fill='none' transform='translate(65,15 )' stroke='rgb(0,0,0)' stroke-width='1.5' onclick='changeSysPrev(evt)' onmouseover='showProp(evt);highlight(evt,1)' onmouseout='hideProp(evt);unhighlight(evt,1)'>
+      <circle cx='0' cy='0' r='10' pointer-events='all' />
+      <polygon points='-7,0 3.5,-6.06218 3.5,6.06218' pointer-events='none' />
+    </g>
+    <g id='prop.navExpose' display='none' opacity='.97' transform='translate(95,25 )' onmouseover='displayTarget(evt)' onmouseout='dismissTarget(evt)' font-size='12'>
+      <rect x='0' y='0' height='18' width='150' stroke='black' fill='white' filter='url(#drop-shadow)' />
+      <switch>
+        <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='5' y='12' fill='black' stroke='none'>&#12377;&#12409;&#12390;&#12398;&#12524;&#12452;&#12516;&#12540;&#12434;&#34920;&#31034;</text>
+        <text x='5' y='12' fill='black' stroke='none'>Show all layers</text>
+      </switch>
+    </g>
+    <g id='navExpose' fill='none' transform='translate(90,15 )' stroke='rgb(0,0,0)' stroke-width='1.5' onclick='toggleExpose(evt)' onmouseover='showProp(evt);highlight(evt,1)' onmouseout='hideProp(evt);unhighlight(evt,1)'>
+      <circle cx='0' cy='0' r='10' pointer-events='all' />
+      <rect x='-5' y='-5' height='3.5' width='3.5' pointer-events='none' />
+      <rect x='-5' y='1.5' height='3.5' width='3.5' pointer-events='none' />
+      <rect x='1.5' y='1.5' height='3.5' width='3.5' pointer-events='none' />
+      <rect x='1.5' y='-5' height='3.5' width='3.5' pointer-events='none' />
+    </g>
+    <g id='canvas.navExpose' display='none' />
+    <g id='navTitle' display='inline' fill='black' stroke='none' text-align='start' font-size='12'>
+      <switch>
+        <text systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' x='105' y='21'>Simulink &#12398; Web &#34920;&#31034;</text>
+        <text x='105' y='21'>Simulink Web View</text>
+      </switch>
+    </g>
+    <g id='prop.navAbout' display='none' opacity='.97' transform='translate(65,60 )' font-size='12'>
+      <rect x='0' y='0' height='30' width='275' stroke='black' fill='white' filter='url(#drop-shadow)' />
+      <switch>
+        <g systemLanguage='ja' font-family='MS Gothic,AppleGothic,Caslon' fill='black' stroke='none'>
+          <text x='5' y='12'>Simulink &#12398; Web &#34920;&#31034;</text>
+          <text x='5' y='24'>Simulink Report Generator v3.0 &#12391;&#12456;&#12463;&#12473;&#12509;&#12540;&#12488;</text>
+        </g>
+        <g fill='black' stroke='none'>
+          <text x='5' y='12'>Simulink Web View</text>
+          <text x='5' y='24'>Exported with Simulink Report Generator v3.0</text>
+        </g>
+      </switch>
+    </g>
+  </g>
+</svg>

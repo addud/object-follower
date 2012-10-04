@@ -1,0 +1,5 @@
+# Apache server settings.  Used to set SVG file mime-types for Mozilla
+
+AddType image/svg+xml .svg
+AddType image/svg+xml .svgz
+AddEncoding gzip .svgz

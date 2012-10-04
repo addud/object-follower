@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual C++ Express 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sprite", "sprite.vcproj", "{3142FDD8-35C5-4ED2-9D2A-06C15BCF7480}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SpritePC", "SpritePC\SpritePC.vcproj", "{D2D4FC3B-393A-4F2D-A24E-5C6669EB8D1B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3142FDD8-35C5-4ED2-9D2A-06C15BCF7480}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3142FDD8-35C5-4ED2-9D2A-06C15BCF7480}.Debug|Win32.Build.0 = Debug|Win32
+		{3142FDD8-35C5-4ED2-9D2A-06C15BCF7480}.Release|Win32.ActiveCfg = Release|Win32
+		{3142FDD8-35C5-4ED2-9D2A-06C15BCF7480}.Release|Win32.Build.0 = Release|Win32
+		{D2D4FC3B-393A-4F2D-A24E-5C6669EB8D1B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D2D4FC3B-393A-4F2D-A24E-5C6669EB8D1B}.Debug|Win32.Build.0 = Debug|Win32
+		{D2D4FC3B-393A-4F2D-A24E-5C6669EB8D1B}.Release|Win32.ActiveCfg = Release|Win32
+		{D2D4FC3B-393A-4F2D-A24E-5C6669EB8D1B}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

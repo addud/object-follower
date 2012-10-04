@@ -1,0 +1,4 @@
+echo Executing NeXTTool to upload follow.rxe...
+sudo ../NeXTTool /COM=usb -download=follow.rxe
+sudo ../NeXTTool /COM=usb -listfiles=follow.rxe
+echo NeXTTool is terminated.

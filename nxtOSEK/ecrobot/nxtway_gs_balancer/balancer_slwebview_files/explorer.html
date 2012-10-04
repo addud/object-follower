@@ -1,0 +1,35 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel= "stylesheet" href="explorer_files/dtree.css" type="text/css" />
+    <script type="text/javascript" src="explorer_files/dtree.js"></script>
+    <script type="text/javascript" src="slwebview.js"></script>
+    <script type="text/javascript" src="id_mapping.js"></script>
+    <title>Simulink の Web 表示</title>
+  </head>
+  <body leftmargin="3"  topmargin="0" marginwidth="3" marginheight="3">
+    <script type="text/javascript">
+<!--
+var explorer = new dTree('explorer');
+explorer.add(0,-1,"Simulink Root","javascript:toggleExpose();","Simulink Root","balancer_slwebview_model");
+explorer.add(1,0,"balancer","javascript:changeSysByName('balancer',1);","balancer","balancer_slwebview_model","explorer_files/SimulinkModelIcon.gif","explorer_files/SimulinkModelIcon.gif",1);
+explorer.add(2,1,"Control","javascript:changeSysByName('balancer/Control',1);","balancer/Control","balancer_slwebview_model","explorer_files/SubSystemIcon.gif","explorer_files/SubSystemIcon.gif",0);
+explorer.add(3,2,"Cal_PWM","javascript:changeSysByName('balancer/Control/Cal_PWM',1);","balancer/Control/Cal_PWM","balancer_slwebview_model","explorer_files/SubSystemIcon.gif","explorer_files/SubSystemIcon.gif",0);
+explorer.add(4,2,"Cal_Reference","javascript:changeSysByName('balancer/Control/Cal_Reference',1);","balancer/Control/Cal_Reference","balancer_slwebview_model","explorer_files/SubSystemIcon.gif","explorer_files/SubSystemIcon.gif",0);
+explorer.add(5,2,"Cal_x1","javascript:changeSysByName('balancer/Control/Cal_x1',1);","balancer/Control/Cal_x1","balancer_slwebview_model","explorer_files/SubSystemIcon.gif","explorer_files/SubSystemIcon.gif",0);
+explorer.add(6,2,"DiscreteIntegrator","javascript:changeSysByName('balancer/Control/DiscreteIntegrator',1);","balancer/Control/DiscreteIntegrator","balancer_slwebview_model","explorer_files/SubSystemIcon.gif","explorer_files/SubSystemIcon.gif",0);
+explorer.add(7,3,"Cal_vol_max","javascript:changeSysByName('balancer/Control/Cal_PWM/Cal_vol_max',1);","balancer/Control/Cal_PWM/Cal_vol_max","balancer_slwebview_model","explorer_files/SubSystemIcon.gif","explorer_files/SubSystemIcon.gif",0);
+explorer.add(8,4,"DiscreteIntegrator","javascript:changeSysByName('balancer/Control/Cal_Reference/DiscreteIntegrator',1);","balancer/Control/Cal_Reference/DiscreteIntegrator","balancer_slwebview_model","explorer_files/SubSystemIcon.gif","explorer_files/SubSystemIcon.gif",0);
+explorer.add(9,4,"LowPathFilter","javascript:changeSysByName('balancer/Control/Cal_Reference/LowPathFilter',1);","balancer/Control/Cal_Reference/LowPathFilter","balancer_slwebview_model","explorer_files/SubSystemIcon.gif","explorer_files/SubSystemIcon.gif",0);
+explorer.add(10,5,"DiscreteDerivative","javascript:changeSysByName('balancer/Control/Cal_x1/DiscreteDerivative',1);","balancer/Control/Cal_x1/DiscreteDerivative","balancer_slwebview_model","explorer_files/SubSystemIcon.gif","explorer_files/SubSystemIcon.gif",0);
+explorer.add(11,5,"DiscreteIntegrator","javascript:changeSysByName('balancer/Control/Cal_x1/DiscreteIntegrator',1);","balancer/Control/Cal_x1/DiscreteIntegrator","balancer_slwebview_model","explorer_files/SubSystemIcon.gif","explorer_files/SubSystemIcon.gif",0);
+explorer.add(12,5,"LowPathFilter","javascript:changeSysByName('balancer/Control/Cal_x1/LowPathFilter',1);","balancer/Control/Cal_x1/LowPathFilter","balancer_slwebview_model","explorer_files/SubSystemIcon.gif","explorer_files/SubSystemIcon.gif",0);
+var svgState = getSvgState(gHomeSys);
+svgState.tree = explorer;
+document.write(svgState.tree);
+//-->
+    </script>
+  </body>
+</html>
+

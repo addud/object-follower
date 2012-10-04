@@ -1,0 +1,23 @@
+name proposal;
+spritepaq
+
+command line: 
+name of the spr file
+width 
+height (it will calculate the # of frames)
+forced type of compression
+
+header:
+sprite deflate version
+width
+height
+number of frames
+compression method used
+byte offset to frame data
+bitfield of compressed frames
+
+Internally
+for each sprite frame
+	compress the frame
+	check to see if the size is smaller when compressed
+	

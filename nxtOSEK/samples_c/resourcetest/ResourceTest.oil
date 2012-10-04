@@ -1,0 +1,94 @@
+#include "implementation.oil"
+
+CPU ATMEL_AT91SAM7S256
+{
+	OS LEJOS_OSEK
+  	{
+    	STATUS = EXTENDED;
+    	STARTUPHOOK = TRUE;
+    	ERRORHOOK = FALSE;
+    	SHUTDOWNHOOK = FALSE;
+    	PRETASKHOOK = FALSE;
+    	POSTTASKHOOK = FALSE;
+    	USEGETSERVICEID = FALSE;
+    	USEPARAMETERACCESS = FALSE;
+    	USERESSCHEDULER = FALSE;
+  	};
+
+	/* Definition of application mode */
+  	APPMODE appmode1{}; 
+  	
+  	/* Definition of resource */
+  	RESOURCE resource1
+	{
+    	RESOURCEPROPERTY = STANDARD;
+  	};
+  
+  	/* Definition of event */
+  	EVENT event1
+	{
+    	MASK = AUTO;
+  	};
+  
+  	/* Definition of HighTask */
+  	TASK HighTask
+  	{
+    	AUTOSTART = FALSE;
+    	SCHEDULE = FULL;
+    	PRIORITY = 3;
+    	ACTIVATION = 1;
+    	SCHEDULE = FULL;
+    	RESOURCE = resource1;
+    	EVENT = event1;
+    	STACKSIZE = 512;
+  	};
+  
+  	/* Definition of LowTask */
+  	TASK LowTask
+  	{
+    	AUTOSTART = FALSE;
+    	PRIORITY = 2;
+    	ACTIVATION = 1;
+    	SCHEDULE = FULL;
+    	RESOURCE = resource1;
+    	STACKSIZE = 512;
+  	};
+
+	/* Definition of OSEK Alarm Counter */
+  	COUNTER SysTimerCnt
+	{
+    	MINCYCLE = 1;
+    	MAXALLOWEDVALUE = 100000;
+    	TICKSPERBASE = 1;
+  	};
+  
+  	ALARM cyclic_alarm1
+	{
+    	COUNTER = SysTimerCnt;
+    	ACTION = ACTIVATETASK
+		{
+      		TASK = HighTask;
+     	};
+     	AUTOSTART = TRUE
+		{
+       		ALARMTIME = 3000;
+       		CYCLETIME = 10000;
+       		APPMODE = appmode1;
+     	};
+	};
+   
+   	ALARM cyclic_alarm2
+	{
+    	COUNTER = SysTimerCnt;
+       	ACTION = ACTIVATETASK
+		{
+        	TASK = LowTask;
+        };
+        AUTOSTART = TRUE
+		{
+        	ALARMTIME = 3000;
+          	CYCLETIME = 10000;
+          	APPMODE = appmode1;
+        };
+	};
+};

@@ -1,0 +1,7 @@
+
+# This template makefile is needed for backward compatibility
+ifndef ROOT
+ROOT := $(dir $(lastword $(MAKEFILE_LIST)))..
+endif
+
+include $(ROOT)/ecrobot/ecrobot.mak

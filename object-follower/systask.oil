@@ -1,0 +1,166 @@
+#include "implementation.oil"
+
+CPU ATMEL_AT91SAM7S256
+{
+  OS LEJOS_OSEK
+  {
+    STATUS = EXTENDED;
+    STARTUPHOOK = FALSE;
+    ERRORHOOK = FALSE;
+    SHUTDOWNHOOK = FALSE;
+    PRETASKHOOK = FALSE;
+    POSTTASKHOOK = FALSE;
+    USEGETSERVICEID = FALSE;
+    USEPARAMETERACCESS = FALSE;
+    USERESSCHEDULER = FALSE;
+  };
+
+  /* Definition of application mode */
+  APPMODE appmode1{};
+
+  EVENT TouchOnEvent { MASK = AUTO; };
+  EVENT TouchOffEvent { MASK = AUTO; };
+  EVENT AlgoLightEvent { MASK = AUTO; };
+  EVENT AlgoDistEvent { MASK = AUTO; };
+  EVENT SysSpeedEvent { MASK = AUTO; };
+  EVENT SysStearEvent { MASK = AUTO; };
+
+  COUNTER SysTimerCnt
+  {
+    MINCYCLE = 1;
+    MAXALLOWEDVALUE = 10000;
+    TICKSPERBASE = 1; /* One tick is equal to 1msec */
+  };
+
+  ALARM cyclic_data_alarm_10ms
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = DataTask;
+    };
+    
+  AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 5;
+        APPMODE = appmode1;
+    };
+  };
+  
+  ALARM cyclic_algo_alarm_10ms
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = AlgoTask;
+    };
+    
+  AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 5;
+        APPMODE = appmode1;
+    };
+  };
+  
+  ALARM cyclic_sys_alarm_10ms
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = SysTask;
+    };
+    
+  AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 5;
+        APPMODE = appmode1;
+    };
+  };
+  
+  ALARM cyclic_idle_alarm_10ms
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = IdleTask;
+    };
+    
+  AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 10;
+        APPMODE = appmode1;
+    };
+  };
+
+  ALARM cyclic_alarm_500ms
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = ButtonTask;
+    };
+    
+  AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 500;
+        APPMODE = appmode1;
+    };
+  };
+
+  TASK SysTask
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 4; /* Smaller value means lower priority */
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */
+    
+    EVENT = SysSpeedEvent;
+  	EVENT = SysStearEvent;
+  };
+  
+  TASK AlgoTask
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 5; /* Smaller value means lower priority */
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */
+    
+    EVENT = AlgoLightEvent;
+    EVENT = AlgoDistEvent;
+  };
+
+  TASK DataTask
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 6; /* Smaller value means lower priority */
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */
+  };
+
+  TASK ButtonTask
+  {
+    AUTOSTART = TRUE;
+
+    PRIORITY = 10; /* Smaller value means lower priority */
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */
+  };
+
+  TASK IdleTask
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 1; /* Smaller value means lower priority */
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */
+  };
+};

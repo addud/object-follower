@@ -1,0 +1,107 @@
+#include "implementation.oil"
+
+CPU ATMEL_AT91SAM7S256
+{
+  OS LEJOS_OSEK
+  {
+    STATUS = EXTENDED;
+    STARTUPHOOK = FALSE;
+    ERRORHOOK = FALSE;
+    SHUTDOWNHOOK = FALSE;
+    PRETASKHOOK = FALSE;
+    POSTTASKHOOK = FALSE;
+    USEGETSERVICEID = FALSE;
+    USEPARAMETERACCESS = FALSE;
+    USERESSCHEDULER = FALSE;
+  };
+
+  /* Definition of application mode */
+  APPMODE appmode1{};
+
+  /* Definition of Touch Sensor ON Event */
+  EVENT TouchSensorOnEvent{
+    MASK = AUTO;
+  };
+
+  /* Definition of Touch Sensor OFF Event */
+  EVENT TouchSensorOffEvent{
+    MASK = AUTO;
+  };
+
+  /* Definition of EventDispatcher */
+  TASK EventDispatcher
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 3;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */ 
+  };
+
+  /* Definition of EventHandler */
+  TASK EventHandler
+  {
+    AUTOSTART = TRUE
+    {
+      APPMODE = appmode1;
+    };
+    PRIORITY = 2;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */
+    EVENT = TouchSensorOnEvent;
+    EVENT = TouchSensorOffEvent; 
+  };
+
+  /* Definition of TaskLCD */
+  TASK TaskLCD
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 1;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */ 
+  };
+
+  /* Definition of OSEK Alarm Counter */
+  COUNTER SysTimerCnt
+  {
+    MINCYCLE = 1;
+    MAXALLOWEDVALUE = 10000;
+    TICKSPERBASE = 1; /* One tick is equal to 1msec */ 
+  };
+
+  /* Definition of EventDispatcher execution timing */
+  ALARM cyclic_alarm1
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = EventDispatcher;
+    };
+    AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 1; /* Executed every 1msec */
+        APPMODE = appmode1;
+    };
+  };
+
+  /* Definition of TaskLCD execution timing */
+  ALARM cyclic_alarmLCD
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = TaskLCD;
+    };
+    AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 500; /* Executed every 500msec */
+        APPMODE = appmode1;
+    };
+  };
+};
+
+  

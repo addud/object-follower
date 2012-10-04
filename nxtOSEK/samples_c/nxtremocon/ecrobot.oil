@@ -1,0 +1,116 @@
+/* OSEK OIL definition for joystick_ctrl */
+#include "implementation.oil"
+
+CPU ATMEL_AT91SAM7S256
+{
+  OS LEJOS_OSEK
+  {
+    STATUS = EXTENDED;
+    STARTUPHOOK = FALSE;
+    SHUTDOWNHOOK = FALSE;
+    PRETASKHOOK = FALSE;
+    POSTTASKHOOK = FALSE;
+    USEGETSERVICEID = FALSE;
+    USEPARAMETERACCESS = FALSE;
+    USERESSCHEDULER = FALSE;
+  };
+
+  APPMODE appmode1{};
+
+
+  /* Definition of Initialization Task */
+  TASK OSEK_Task_ECRobotInitialize
+  {
+    AUTOSTART = TRUE
+    {
+      APPMODE = appmode1;
+    };
+    PRIORITY = 4;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 128;
+  };
+
+  /* Definitions of a Periodical Task: Fcn1 */
+  TASK OSEK_Task_Fcn1
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 3;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512;
+  };
+
+  ALARM OSEK_Alarm_Fcn1
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+      TASK = OSEK_Task_Fcn1;
+    };
+    AUTOSTART = TRUE
+    {
+      APPMODE = appmode1;
+      ALARMTIME = 1;
+      CYCLETIME = 10;
+    };
+  };
+
+  /* Definitions of a Periodical Task: Fcn2 */
+  TASK OSEK_Task_Fcn2
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 2;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512;
+  };
+
+  ALARM OSEK_Alarm_Fcn2
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+      TASK = OSEK_Task_Fcn2;
+    };
+    AUTOSTART = TRUE
+    {
+      APPMODE = appmode1;
+      ALARMTIME = 1;
+      CYCLETIME = 50;
+    };
+  };
+
+  /* Definitions of LCD monitor Task */
+  TASK OSEK_Task_ECRobotLCDMonitor
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 1;
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512;
+  };
+
+  ALARM OSEK_Alarm_ECRobotLCDMonitor
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+      TASK = OSEK_Task_ECRobotLCDMonitor;
+    };
+    AUTOSTART = TRUE
+    {
+      APPMODE = appmode1;
+      ALARMTIME = 1;
+      CYCLETIME = 500;
+    };
+  };
+
+  /* Definition of Alarm counter */
+  COUNTER SysTimerCnt
+  {
+    MINCYCLE = 1;
+    MAXALLOWEDVALUE = 10000;
+    TICKSPERBASE = 1;
+  };
+};

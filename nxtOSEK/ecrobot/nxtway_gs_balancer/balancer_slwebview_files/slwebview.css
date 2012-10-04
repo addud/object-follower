@@ -1,0 +1,39 @@
+/**
+ *  Cascading Style Sheet for the Simulink Web View
+ *
+ *  Copyright 1997-2007 The MathWorks, Inc.
+ */
+
+.content {
+    font-family: MS Gothic,AppleGothic,Caslon;
+    font-size: 9pt;
+}
+.proptable {
+   pointer-events: none;
+   opacity: .95;
+}
+.toolbarButton {
+    cursor: pointer;
+    margin: 1px;
+}
+.navDropDownItem {
+    border: 1px solid #000000; 
+    background-color: #EEEEEE; 
+    font-weight: bold; 
+    font-family: MS Gothic,AppleGothic,Caslon;
+    font-size: 9pt; 
+    cursor:pointer;
+}
+.tooltipContainer {
+    background-color: #999999;
+    padding-bottom: 3px;
+    padding-right:    3px;
+    position: absolute;
+}
+.tooltipContent {
+    border: 1px solid #000000;
+    font-family: MS Gothic,AppleGothic,Caslon;
+    font-size: 9pt;
+    padding: 2px;
+    background-color: #FFFFFF;
+}
