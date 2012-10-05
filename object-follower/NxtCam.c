@@ -18,7 +18,6 @@
 
 #define ADDRESS 0x02
 
-
 /* Data received from the camera is stored in a static array.
  * TODO: Might be better to do it in a reentrant way so as to allow several
  * cameras. Better: do it all in C++...
@@ -26,15 +25,13 @@
  */
 static U8 nxtcamdata[41];
 
-
 /*
  * Initialize the specified port to be used for I2C communication
  * NOTE: user defined I2C sensor initialize function should be implemented
  *       in user defined an OSEK initialization Task (not in LEJOS OSEK device init hook).
  *       because device init hook is invoked in a loop while the button instruction screen is appeared.
  */
-void init_nxtcam(U8 port_id)
-{
+void init_nxtcam(U8 port_id) {
 	nxt_avr_set_input_power(port_id, 2);
 	i2c_enable(port_id);
 
@@ -43,16 +40,14 @@ void init_nxtcam(U8 port_id)
 		nxtcamdata[i] = 0;
 }
 
-
 static U8 nxtcambuffer[8];
-SINT send_nxtcam_command(U8 port_id, U8 command)
-{
+SINT send_nxtcam_command(U8 port_id, U8 command) {
 	while (i2c_busy(port_id) != 0)
 		;
 	nxtcambuffer[0] = command;
 	/* write Single shot command */
-	SINT ret = i2c_start_transaction(port_id, ADDRESS, 0x41, 1, nxtcambuffer,
-			1, 1);
+	SINT ret = i2c_start_transaction(port_id, ADDRESS, 0x41, 1, nxtcambuffer, 1,
+			1);
 	return ret;
 }
 
@@ -68,8 +63,7 @@ SINT send_nxtcam_command(U8 port_id, U8 command)
 // For debugging, usefull to check if communication with the NxtCam is actually happening.
 static int nxtcamtransaccounter = 0;
 
-int request(U8 port_id)
-{
+int request(U8 port_id) {
 	if (i2c_busy(port_id) == 0) /* check the status of I2C comm. */
 	{
 		/* i2c_start_transaction just triggers an I2C transaction,
@@ -85,8 +79,7 @@ int request(U8 port_id)
 	return nxtcamtransaccounter;
 }
 
-U8* getdata()
-{
+U8* getdata() {
 	return nxtcamdata;
 }
 
@@ -95,22 +88,18 @@ U8* getdata()
  * Returns -1 if no rectangle of color id pcolorid is found, or all
  * rectangle are strictly smaller than pminarea.
  */
-int getbiggestrect(U8 pcolorid, int pminarea)
-{
+int getbiggestrect(U8 pcolorid, int pminarea) {
 	int rectindex = -1;
 	int i;
 	int maxarea = pminarea;
-	for (i = 0; i < nxtcamdata[0]; i++)
-	{
+	for (i = 0; i < nxtcamdata[0]; i++) {
 		int colorid = (int) nxtcamdata[1 + 5 * i + 0];
 
-		if (colorid == pcolorid)
-		{
+		if (colorid == pcolorid) {
 
 			int area = getArea(i);
 
-			if (area >= maxarea)
-			{
+			if (area >= maxarea) {
 				maxarea = area;
 				rectindex = i;
 			}
@@ -123,8 +112,7 @@ int getbiggestrect(U8 pcolorid, int pminarea)
 /*
  * Returns the X coordinate of the center for rectangle of index rectindex.
  */
-int getX(U8 rectindex)
-{
+int getX(U8 rectindex) {
 	int xul = (int) nxtcamdata[5 * rectindex + 1 + 1];
 	int xlr = (int) nxtcamdata[5 * rectindex + 1 + 3];
 	return (xlr + xul) / 2;
@@ -133,8 +121,7 @@ int getX(U8 rectindex)
 /*
  * Returns the Y coordinate of the center for rectangle of index rectindex.
  */
-int getY(U8 rectindex)
-{
+int getY(U8 rectindex) {
 	int yul = (int) nxtcamdata[5 * rectindex + 1 + 2];
 	int ylr = (int) nxtcamdata[5 * rectindex + 1 + 4];
 	return (yul + ylr) / 2;
@@ -164,13 +151,12 @@ int getHeight(U8 rectindex) {
  * Returns the area of the rectangle of index rectindex.
  */
 int getArea(U8 rectindex) {
-	return getWidth(rectindex)*getHeight(rectindex);
+	return getWidth(rectindex) * getHeight(rectindex);
 }
 
 /*
  * Terminate I2C communication on the specified port
  */
-void term_nxtcam(U8 port_id)
-{
+void term_nxtcam(U8 port_id) {
 	i2c_disable(port_id);
 }

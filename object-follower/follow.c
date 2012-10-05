@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "kernel.h"
-#include "kernel_id.h"
 #include "ecrobot_interface.h"
 #include "NxtCam.h"
 
