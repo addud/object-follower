@@ -30,7 +30,7 @@ CPU ATMEL_AT91SAM7S256
     TICKSPERBASE = 1; /* One tick is equal to 1msec */
   };
 
-  ALARM cyclic_distance_alarm_100ms
+  ALARM cyclic_distance_alarm_30ms
   {
     COUNTER = SysTimerCnt;
     ACTION = ACTIVATETASK
@@ -41,27 +41,11 @@ CPU ATMEL_AT91SAM7S256
   AUTOSTART = TRUE
     {
         ALARMTIME = 1;
-        CYCLETIME = 100;
+        CYCLETIME = 30;
         APPMODE = appmode1;
     };
   };
-  
-  ALARM cyclic_light_alarm_5ms
-  {
-    COUNTER = SysTimerCnt;
-    ACTION = ACTIVATETASK
-    {
-        TASK = LightTask;
-    };
-    
-  AUTOSTART = TRUE
-    {
-        ALARMTIME = 1;
-        CYCLETIME = 1;
-        APPMODE = appmode1;
-    };
-  };
-  
+   
   ALARM cyclic_idle_alarm_100ms
   {
     COUNTER = SysTimerCnt;
@@ -76,15 +60,6 @@ CPU ATMEL_AT91SAM7S256
         CYCLETIME = 100;
         APPMODE = appmode1;
     };
-  };
-
-  TASK LightTask
-  {
-    AUTOSTART = FALSE;
-    PRIORITY = 5; /* Smaller value means lower priority */
-    ACTIVATION = 1;
-    SCHEDULE = FULL;
-    STACKSIZE = 512; /* Stack size */
   };
 
   TASK DistanceTask

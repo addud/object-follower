@@ -6,11 +6,11 @@
  ** Author: Adrian Dudau
  ** -------------------------------------------------------------------------*/
 
-#define STOPPER 0                                      /* Smaller than any datum */
-#define MEDIAN_FILTER_SIZE    (10)						/* Size of the filter window */
-
 #include <stdlib.h>
 #include "filter.h"
+
+#define STOPPER 0                                      /* Smaller than any datum */
+#define MEDIAN_FILTER_SIZE    (10)						/* Size of the filter window */
 
 /* ---------------------------------------------------------------------------
  ** Implements a median filter for the values read from the camera.
@@ -19,7 +19,7 @@
  ** It needs to be redesigned for use with multiple cameras
  ** -------------------------------------------------------------------------*/
 
-data_t MedianFilter(data_t datum) {
+data_t median_filter(data_t datum) {
 	struct pair {
 		struct pair *point; /* Pointers forming list linked in sorted order */
 		data_t value; /* Values to sort */
@@ -33,7 +33,7 @@ data_t MedianFilter(data_t datum) {
 	struct pair *scan; /* Pointer used to scan down the sorted list */
 	struct pair *scanold; /* Previous value of scan */
 	struct pair *median; /* Pointer to median */
-	U16 i;
+	unsigned int i;
 
 // if (datum == STOPPER)
 // {
@@ -99,3 +99,5 @@ data_t MedianFilter(data_t datum) {
 	}
 	return median->value;
 }
+
+

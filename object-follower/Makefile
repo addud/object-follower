@@ -7,7 +7,10 @@ NXTOSEKROOT = ../nxtOSEK
 ########################################################################
 
 TARGET_SOURCES := \
-        $(TARGET).c
+        $(TARGET).c \
+ 	filter.c \
+ 	lib.c \
+	camera.c
 TOPPERS_OSEK_OIL_SOURCE := ./$(TARGET).oil
 
 PATH := $(WINEPATH):$(PATH)

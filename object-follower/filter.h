@@ -10,8 +10,12 @@
 #define __FILTER_H
 
 /* Type of filtered data - must be numeric */
-typedef U16 data_t;
+typedef int data_t;
 
-data_t MedianFilter(data_t datum);
+data_t median_filter(data_t datum);
+
+
+
 
 #endif /* __FILTER_H */
+
