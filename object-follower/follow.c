@@ -26,7 +26,7 @@ static U8 startCalibration = FALSE;
 static int size_ref = 100;
 
 // global variables used to display information
-static int sizeLCD;
+static int sizeLCD, xLCD, yLCD;
 char *calibrationLCD;
 
 void display_values(void) {
@@ -34,9 +34,16 @@ void display_values(void) {
 	U8 line = 0;
 
 	display_goto_xy(0, line++);
-	message = "size: ";
+	message = "size:";
 	display_string(message);
 	display_int(sizeLCD, 4);
+
+	display_goto_xy(0, line++);
+	message = "pos:";
+	display_string(message);
+	display_int(xLCD, 3);
+	display_string(",");
+	display_int(yLCD, 3);
 
 	display_update();
 
@@ -64,7 +71,7 @@ TASK(DistanceTask) {
 
 	U8 rectindex;
 
-	int area, size,x,y;
+	int area, size, x, y;
 
 	if (tracking_enabled != 0) {
 		tracking_enabled = send_nxtcam_command(PORT_CAMERA, ENABLE_TRACKING);
@@ -83,6 +90,12 @@ TASK(DistanceTask) {
 			size = fisqrt(area);
 
 			sizeLCD = size;
+
+			x = getX(rectindex);
+			y = getY(rectindex);
+
+			xLCD = x;
+			yLCD = y;
 
 		}
 
