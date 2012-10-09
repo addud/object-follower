@@ -23,6 +23,12 @@ CPU ATMEL_AT91SAM7S256
   EVENT SysSpeedEvent { MASK = AUTO; };
   EVENT SysStearEvent { MASK = AUTO; };
 
+  /*Definition of resource*/
+  RESOURCE dataMutex
+  {
+	RESOURCEPROPERTY = STANDARD;
+  };
+
   COUNTER SysTimerCnt
   {
     MINCYCLE = 1;
@@ -61,6 +67,16 @@ CPU ATMEL_AT91SAM7S256
         APPMODE = appmode1;
     };
   };
+  
+  TASK MotorControlTask
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 3; /* Smaller value means lower priority */
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    RESOURCE = dataMutex;
+    STACKSIZE = 512; /* Stack size */
+  };
 
   TASK DistanceTask
   {
@@ -68,6 +84,7 @@ CPU ATMEL_AT91SAM7S256
     PRIORITY = 3; /* Smaller value means lower priority */
     ACTIVATION = 1;
     SCHEDULE = FULL;
+    RESOURCE = dataMutex;
     STACKSIZE = 512; /* Stack size */
   };
 
