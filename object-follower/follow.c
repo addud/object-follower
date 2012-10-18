@@ -12,16 +12,19 @@
 #define PORT_MOTOR_RIGHT		NXT_PORT_A
 #define PORT_CAMERA				NXT_PORT_S2
 
-#define COLORID				0
+#define COLORID					0
 
-#define DESIRED_SIZE	50
+#define DESIRED_SIZE			50
+#define DESIRED_POSITION		83
 
 //Maximum total speeed fed to a motor
-#define MAX_SPEED		90
+#define MAX_SPEED				90
 //Normal speed of without any adjustments from the PID controllers
-#define NORMAL_SPEED	70
+#define NORMAL_SPEED			70
 //Maximum speed where the robot does not move forward
-#define STALL_SPEED		50
+#define STALL_SPEED				50
+//Speed used for spinning
+#define SPIN_SPEED 				70
 
 /*Mutex lock for shared object data*/
 DeclareResource(dataMutex);
@@ -36,17 +39,16 @@ DeclareTask( IdleTask);
 //DeclareTask(MotorControlTask);
 
 typedef struct {
-	int area;
-	int x;
+	int position;
 	int size;
 } object_data_t;
 
 static U8 startCalibration = FALSE;
 
 // global variables used to display information
-static int sizeLCD, xLCD, yLCD, speedLCD, devspeedLCD;
+static int sizeLCD, xLCD, speedLCD, devspeedLCD, diradjLCD;
 
-object_data_t objData = { 0, 0, 0 };
+object_data_t objData = { 0, 0 };
 
 void display_values(void) {
 	char *message = NULL;
@@ -60,9 +62,7 @@ void display_values(void) {
 	display_goto_xy(0, line++);
 	message = "pos:";
 	display_string(message);
-	display_int(xLCD, 3);
-	display_string(",");
-	display_int(yLCD, 3);
+	display_int(xLCD, 4);
 
 	display_goto_xy(0, line++);
 	message = "speed:";
@@ -73,6 +73,11 @@ void display_values(void) {
 	message = "dev speed:";
 	display_string(message);
 	display_int(devspeedLCD, 4);
+
+	display_goto_xy(0, line++);
+	message = "dir dev:";
+	display_string(message);
+	display_int(diradjLCD, 4);
 
 	display_update();
 }
@@ -104,49 +109,43 @@ object_data_t getData() {
 	return temp;
 }
 
-int getDistance(int area) {
-	int a = 0, b = 0;
-	int distance;
+//PID constants for speed control
+#define dKp 0.2
+#define dKi 0
+#define dKd 0
 
-	//Possible to create a decreasing linear func?????????????????????
-	distance = a * area + b;
+//Returns the calculated adjustment according to desired direction
+//It is applied on top of the NORMAL_SPEED + new_speed
+int directionPIDController(int d) {
+	// Static vars where the PID values are accumulated
+	static int integral = 0;
+	static int prevError = 0;
 
-	return distance;
+	int error = (DESIRED_POSITION - d);
+	integral += error;
+	int derivative = error - prevError;
+	int out = (dKp * error) + (dKi * integral) + (dKd * derivative);
+	prevError = error;
+
+	return out;
 }
 
-//Function that returns the angle (in degrees) between the car and the object
-int getAngle(int hyp, int kat) {
-	double angleRad;
-	int angleDeg;
+//PID constants for speed control
+#define sKp 0.5
+#define sKi 0
+#define sKd 0
 
-	//Use the distance and "object distance from center" = kat
-	angleRad = asin((double) kat / hyp);
-	angleDeg = (int) (angleRad * 180) / 3.14;
-
-	return angleDeg;
-}
-
-signed int getXVal() {
-	//Return the x coordinate from rectangle 1
-	return getX(1);
-}
-
-//PID constants
-#define Kp 0.5
-#define Ki 0
-#define Kd 0
-
-//Returns the calculated deviation from the normal speed
+//Returns the calculated adjustment according to desired speed
+//It is applied on top of the NORMAL_SPEED
 int speedPIDController(int d) {
-	// Static vars where the PID values
-	// are accumulated
+	// Static vars where the PID values are accumulated
 	static int integral = 0;
 	static int prevError = 0;
 
 	int error = (DESIRED_SIZE - d);
 	integral += error;
 	int derivative = error - prevError;
-	int out = (Kp * error) + (Ki * integral) + (Kd * derivative);
+	int out = (sKp * error) + (sKi * integral) + (sKd * derivative);
 	prevError = error;
 
 	return out;
@@ -155,49 +154,27 @@ int speedPIDController(int d) {
 /**********************************************************************/
 
 TASK(MotorControlTask) {
+
 	//The current object data
 	object_data_t data;
+
 	//Distance to the object
-	int distance;
-	int size;
-	//Angle between the follower and the object
-	int angle;
-	int turnDirection;
-	//Divider of power between turning and going forward
-	int scaler;
-	int onlyTurnThrs = 50;
-	//Maximum value to give to a motor
-	int new_speed;
+	int position, size;
+	int new_speed, direction_adjustment;
+
 	//Motor speed values
 	int leftMotorValue;
 	int rightMotorValue;
 
 	data = getData();
-	distance = getDistance(data.area);
-	angle = getAngle(distance, abs(data.x));
 	size = data.size;
+	position = data.position;
 
-	if (data.x < 0) {
-		turnDirection = -1;
-	} else {
-		turnDirection = 1;
-	}
 
-	//We are going to implement the turning as a deviation from the normal speed given by the speed PID
+	if (size > 0 && position > 0) {
 
-//	if (angle > onlyTurnThrs) {
-//		scaler = 1;
-//		//Just guessing this!!!!!!!!!!!!!!!!!!!
-//		new_speed = MAX_SPEED;
-//	} else {
-//		scaler = angle / onlyTurnThrs;
-//		//PID not in use yet
-//		new_speed = speedPIDController(distance);
-//		new_speed = (new_speed > MAX_SPEED) ? new_speed : MAX_SPEED;
-//	}
+		//If an object was detected we apply the PID control
 
-	//If no object is detected, don't calculate new speed
-	if (size > 0) {
 		int speed_deviation = speedPIDController(size);
 		devspeedLCD = speed_deviation;
 
@@ -205,21 +182,31 @@ TASK(MotorControlTask) {
 		//Trimming
 		new_speed = (new_speed > MAX_SPEED) ? MAX_SPEED : new_speed;
 
+		direction_adjustment = directionPIDController(position);
+
+		speedLCD = new_speed;
+		diradjLCD = direction_adjustment;
+
+		leftMotorValue = new_speed - direction_adjustment;
+		//Trimming
+		leftMotorValue =
+				(leftMotorValue > MAX_SPEED) ? MAX_SPEED : leftMotorValue;
+
+		rightMotorValue = new_speed + direction_adjustment;
+		//Trimming
+		rightMotorValue =
+				(rightMotorValue > MAX_SPEED) ? MAX_SPEED : rightMotorValue;
+
 	} else {
-		new_speed = STALL_SPEED;
+
+		//If no object is detected, we enter spinning mode
+
+		speedLCD = 0;
+		diradjLCD = 0;
 		devspeedLCD = 0;
+		rightMotorValue = SPIN_SPEED;
+		leftMotorValue = -SPIN_SPEED;
 	}
-	speedLCD = new_speed;
-
-//Commented this as we don't have direction control yet
-//
-//	//Calculating the individual motor values in percent
-//	leftMotorValue = turnDirection * scaler * motorMaxValue
-//			+ (1 - scaler) * motorMaxValue;
-//	rightMotorValue = (-turnDirection) * scaler * motorMaxValue
-//			+ (1 - scaler) * new_speed;
-
-	leftMotorValue = rightMotorValue = new_speed;
 
 	//Setting the appropriate speed to the motors
 //	nxt_motor_set_speed(PORT_MOTOR_LEFT, leftMotorValue, 0);
@@ -234,7 +221,7 @@ TASK(DistanceTask) {
 
 	U8 rectindex;
 
-	int area, size, x, y;
+	int area, size, x;
 
 	if (tracking_enabled != 0) {
 		tracking_enabled = send_nxtcam_command(PORT_CAMERA, ENABLE_TRACKING);
@@ -252,20 +239,16 @@ TASK(DistanceTask) {
 
 			size = fisqrt(area);
 
-			sizeLCD = size;
-
 			x = getX(rectindex);
-			y = getY(rectindex);
 
 			//Update the struct containing object data
 			GetResource(dataMutex);
-			objData.area = area;
-			objData.x = x;
+			objData.position = x;
 			objData.size = size;
 			ReleaseResource(dataMutex);
 
+			sizeLCD = size;
 			xLCD = x;
-			yLCD = y;
 
 		}
 
