@@ -14,9 +14,14 @@
 
 #define COLORID				0
 
-#define DESIRED_SIZE	40
+#define DESIRED_SIZE	50
 
-#define MAX_SPEED		80
+//Maximum total speeed fed to a motor
+#define MAX_SPEED		90
+//Normal speed of without any adjustments from the PID controllers
+#define NORMAL_SPEED	70
+//Maximum speed where the robot does not move forward
+#define STALL_SPEED		50
 
 /*Mutex lock for shared object data*/
 DeclareResource(dataMutex);
@@ -30,21 +35,18 @@ DeclareTask( DistanceTask);
 DeclareTask( IdleTask);
 //DeclareTask(MotorControlTask);
 
-static U8 startCalibration = FALSE;
-
-static int size_ref = 100;
-
-// global variables used to display information
-static int sizeLCD, xLCD, yLCD;
-char *calibrationLCD;
-
-typedef struct objectData objectData;
-
-struct objectData {
+typedef struct {
 	int area;
 	int x;
 	int size;
-} objData = { 0, 0, 0 };
+} object_data_t;
+
+static U8 startCalibration = FALSE;
+
+// global variables used to display information
+static int sizeLCD, xLCD, yLCD, speedLCD, devspeedLCD;
+
+object_data_t objData = { 0, 0, 0 };
 
 void display_values(void) {
 	char *message = NULL;
@@ -61,6 +63,16 @@ void display_values(void) {
 	display_int(xLCD, 3);
 	display_string(",");
 	display_int(yLCD, 3);
+
+	display_goto_xy(0, line++);
+	message = "speed:";
+	display_string(message);
+	display_int(speedLCD, 4);
+
+	display_goto_xy(0, line++);
+	message = "dev speed:";
+	display_string(message);
+	display_int(devspeedLCD, 4);
 
 	display_update();
 }
@@ -83,8 +95,8 @@ void user_1ms_isr_type2(void) {
 
 /**************Functions for MotorControlTask**************************/
 
-objectData getData() {
-	objectData temp;
+object_data_t getData() {
+	object_data_t temp;
 
 	GetResource(dataMutex);
 	temp = objData;
@@ -120,17 +132,18 @@ signed int getXVal() {
 }
 
 //PID constants
-#define Kp 1
+#define Kp 0.5
 #define Ki 0
 #define Kd 0
 
+//Returns the calculated deviation from the normal speed
 int speedPIDController(int d) {
 	// Static vars where the PID values
 	// are accumulated
-	static float integral = 0.0f;
-	static float prevError = 0.0f;
+	static int integral = 0;
+	static int prevError = 0;
 
-	int error = (DESIRED_SIZE-d);
+	int error = (DESIRED_SIZE - d);
 	integral += error;
 	int derivative = error - prevError;
 	int out = (Kp * error) + (Ki * integral) + (Kd * derivative);
@@ -143,7 +156,7 @@ int speedPIDController(int d) {
 
 TASK(MotorControlTask) {
 	//The current object data
-	objectData data;
+	object_data_t data;
 	//Distance to the object
 	int distance;
 	int size;
@@ -162,6 +175,7 @@ TASK(MotorControlTask) {
 	data = getData();
 	distance = getDistance(data.area);
 	angle = getAngle(distance, abs(data.x));
+	size = data.size;
 
 	if (data.x < 0) {
 		turnDirection = -1;
@@ -182,11 +196,20 @@ TASK(MotorControlTask) {
 //		new_speed = (new_speed > MAX_SPEED) ? new_speed : MAX_SPEED;
 //	}
 
+	//If no object is detected, don't calculate new speed
+	if (size > 0) {
+		int speed_deviation = speedPIDController(size);
+		devspeedLCD = speed_deviation;
 
-	new_speed = speedPIDController(size);
-	//Trimming
-	new_speed = (new_speed > MAX_SPEED) ? new_speed : MAX_SPEED;
+		new_speed = NORMAL_SPEED + speed_deviation;
+		//Trimming
+		new_speed = (new_speed > MAX_SPEED) ? MAX_SPEED : new_speed;
 
+	} else {
+		new_speed = STALL_SPEED;
+		devspeedLCD = 0;
+	}
+	speedLCD = new_speed;
 
 //Commented this as we don't have direction control yet
 //
@@ -199,8 +222,8 @@ TASK(MotorControlTask) {
 	leftMotorValue = rightMotorValue = new_speed;
 
 	//Setting the appropriate speed to the motors
-	nxt_motor_set_speed(PORT_MOTOR_LEFT, leftMotorValue, 0);
-	nxt_motor_set_speed(PORT_MOTOR_RIGHT, rightMotorValue, 0);
+//	nxt_motor_set_speed(PORT_MOTOR_LEFT, leftMotorValue, 0);
+//	nxt_motor_set_speed(PORT_MOTOR_RIGHT, rightMotorValue, 0);
 
 	TerminateTask();
 }

@@ -63,7 +63,7 @@ CPU ATMEL_AT91SAM7S256
     };
   };
   
-    ALARM cyclic_idle_alarm_50ms
+    ALARM cyclic_motorcontrol_alarm_50ms
   {
     COUNTER = SysTimerCnt;
     ACTION = ACTIVATETASK
