@@ -14,7 +14,9 @@
 
 #define COLORID				0
 
-#define DESIRED_DISTANCE 40
+#define DESIRED_SIZE	40
+
+#define MAX_SPEED		80
 
 /*Mutex lock for shared object data*/
 DeclareResource(dataMutex);
@@ -41,7 +43,8 @@ typedef struct objectData objectData;
 struct objectData {
 	int area;
 	int x;
-} objData = { 0, 0 };
+	int size;
+} objData = { 0, 0, 0 };
 
 void display_values(void) {
 	char *message = NULL;
@@ -120,22 +123,18 @@ signed int getXVal() {
 #define Kp 1
 #define Ki 0
 #define Kd 0
-//Time between runs, changes with MotorControlTask/periodTime
-#define Dt 0.05f
 
-int pidController(int d) {
+int speedPIDController(int d) {
 	// Static vars where the PID values
 	// are accumulated
 	static float integral = 0.0f;
 	static float prevError = 0.0f;
 
-	float error = (d - DESIRED_DISTANCE);
-	integral += (error * Dt);
-	float derivative = (error - prevError) / Dt;
+	int error = (DESIRED_SIZE-d);
+	integral += error;
+	int derivative = error - prevError;
 	int out = (Kp * error) + (Ki * integral) + (Kd * derivative);
 	prevError = error;
-
-	out = 80;
 
 	return out;
 }
@@ -147,6 +146,7 @@ TASK(MotorControlTask) {
 	objectData data;
 	//Distance to the object
 	int distance;
+	int size;
 	//Angle between the follower and the object
 	int angle;
 	int turnDirection;
@@ -154,7 +154,7 @@ TASK(MotorControlTask) {
 	int scaler;
 	int onlyTurnThrs = 50;
 	//Maximum value to give to a motor
-	int motorMaxValue;
+	int new_speed;
 	//Motor speed values
 	int leftMotorValue;
 	int rightMotorValue;
@@ -163,30 +163,44 @@ TASK(MotorControlTask) {
 	distance = getDistance(data.area);
 	angle = getAngle(distance, abs(data.x));
 
-	if (data.x < 0)
+	if (data.x < 0) {
 		turnDirection = -1;
-	else
-		turnDirection = 1;
-
-	if (angle > onlyTurnThrs) {
-		scaler = 1;
-		//Just guessing this!!!!!!!!!!!!!!!!!!!
-		motorMaxValue = 80;
 	} else {
-		scaler = angle / onlyTurnThrs;
-		//PID not in use yet
-		motorMaxValue = pidController(distance);
+		turnDirection = 1;
 	}
 
-	//Calculating the individual motor values in percent
-	leftMotorValue = turnDirection * scaler * motorMaxValue
-			+ (1 - scaler) * motorMaxValue;
-	rightMotorValue = (-turnDirection) * scaler * motorMaxValue
-			+ (1 - scaler) * motorMaxValue;
+	//We are going to implement the turning as a deviation from the normal speed given by the speed PID
 
-	//Setting the apropriate speed to the motors
-//	nxt_motor_set_speed(PORT_MOTOR_LEFT, leftMotorValue, 0);
-//	nxt_motor_set_speed(PORT_MOTOR_RIGHT, rightMotorValue, 0);
+//	if (angle > onlyTurnThrs) {
+//		scaler = 1;
+//		//Just guessing this!!!!!!!!!!!!!!!!!!!
+//		new_speed = MAX_SPEED;
+//	} else {
+//		scaler = angle / onlyTurnThrs;
+//		//PID not in use yet
+//		new_speed = speedPIDController(distance);
+//		new_speed = (new_speed > MAX_SPEED) ? new_speed : MAX_SPEED;
+//	}
+
+
+	new_speed = speedPIDController(size);
+	//Trimming
+	new_speed = (new_speed > MAX_SPEED) ? new_speed : MAX_SPEED;
+
+
+//Commented this as we don't have direction control yet
+//
+//	//Calculating the individual motor values in percent
+//	leftMotorValue = turnDirection * scaler * motorMaxValue
+//			+ (1 - scaler) * motorMaxValue;
+//	rightMotorValue = (-turnDirection) * scaler * motorMaxValue
+//			+ (1 - scaler) * new_speed;
+
+	leftMotorValue = rightMotorValue = new_speed;
+
+	//Setting the appropriate speed to the motors
+	nxt_motor_set_speed(PORT_MOTOR_LEFT, leftMotorValue, 0);
+	nxt_motor_set_speed(PORT_MOTOR_RIGHT, rightMotorValue, 0);
 
 	TerminateTask();
 }
@@ -224,6 +238,7 @@ TASK(DistanceTask) {
 			GetResource(dataMutex);
 			objData.area = area;
 			objData.x = x;
+			objData.size = size;
 			ReleaseResource(dataMutex);
 
 			xLCD = x;
