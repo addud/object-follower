@@ -14,10 +14,10 @@
 
 #define COLORID					0
 
-#define DESIRED_SIZE			50
-#define DESIRED_POSITION		83
+#define SIZE_REFERENCE			50
+#define POSITION_REFERENCE		83
 
-//Maximum total speeed fed to a motor
+//Maximum total speed fed to a motor
 #define MAX_SPEED				90
 //Normal speed of without any adjustments from the PID controllers
 #define NORMAL_SPEED			70
@@ -33,10 +33,9 @@ DeclareResource(dataMutex);
 DeclareCounter( SysTimerCnt);
 
 /*Declaring all tasks*/
-//DeclareTask( ButtonTask);
 DeclareTask( DistanceTask);
 DeclareTask( IdleTask);
-//DeclareTask(MotorControlTask);
+DeclareTask(MotorControlTask);
 
 typedef struct {
 	int position;
@@ -46,7 +45,7 @@ typedef struct {
 static U8 startCalibration = FALSE;
 
 // global variables used to display information
-static int sizeLCD, xLCD, speedLCD, devspeedLCD, diradjLCD;
+static int sizeLCD, xLCD, speedLCD, devspeedLCD, diradjLCD, lmotLCD, rmotLCD;
 
 object_data_t objData = { 0, 0 };
 
@@ -78,6 +77,16 @@ void display_values(void) {
 	message = "dir dev:";
 	display_string(message);
 	display_int(diradjLCD, 4);
+
+	display_goto_xy(0, line++);
+	message = "left motor:";
+	display_string(message);
+	display_int(lmotLCD, 4);
+
+	display_goto_xy(0, line++);
+	message = "right motor:";
+	display_string(message);
+	display_int(rmotLCD, 4);
 
 	display_update();
 }
@@ -121,7 +130,7 @@ int directionPIDController(int d) {
 	static int integral = 0;
 	static int prevError = 0;
 
-	int error = (DESIRED_POSITION - d);
+	int error = (POSITION_REFERENCE - d);
 	integral += error;
 	int derivative = error - prevError;
 	int out = (dKp * error) + (dKi * integral) + (dKd * derivative);
@@ -142,7 +151,7 @@ int speedPIDController(int d) {
 	static int integral = 0;
 	static int prevError = 0;
 
-	int error = (DESIRED_SIZE - d);
+	int error = (SIZE_REFERENCE - d);
 	integral += error;
 	int derivative = error - prevError;
 	int out = (sKp * error) + (sKi * integral) + (sKd * derivative);
@@ -169,7 +178,6 @@ TASK(MotorControlTask) {
 	data = getData();
 	size = data.size;
 	position = data.position;
-
 
 	if (size > 0 && position > 0) {
 
@@ -207,6 +215,9 @@ TASK(MotorControlTask) {
 		rightMotorValue = SPIN_SPEED;
 		leftMotorValue = -SPIN_SPEED;
 	}
+
+	lmotLCD = leftMotorValue;
+	rmotLCD = rightMotorValue;
 
 	//Setting the appropriate speed to the motors
 //	nxt_motor_set_speed(PORT_MOTOR_LEFT, leftMotorValue, 0);
