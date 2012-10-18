@@ -6,6 +6,7 @@ NXTOSEKROOT = ../nxtOSEK
 
 ########################################################################
 
+#Target source
 TARGET_SOURCES := \
         $(TARGET).c
 TOPPERS_OSEK_OIL_SOURCE := ./$(TARGET).oil

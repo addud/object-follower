@@ -25,6 +25,7 @@ CPU ATMEL_AT91SAM7S256
     TICKSPERBASE = 1; /* One tick is equal to 1msec */
   };
 
+  /*Definition of the MotorControlTask task*/
   TASK MotorControlTask
   {
     AUTOSTART = TRUE

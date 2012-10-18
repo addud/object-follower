@@ -40,6 +40,7 @@ TASK(MotorControlTask)
 	
 	while(1)
 	{
+		//Get the distance from the sound sensor
 		distance = ecrobot_get_sonar_sensor(PORT_DISTSENSOR);
 		
 		if ((turning>0 && turning<=TURN_ITERATIONS) || distance<=DESIRED_DISTANCE)
