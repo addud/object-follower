@@ -51,7 +51,7 @@ CPU ATMEL_AT91SAM7S256
         APPMODE = appmode1;
     };
   };
-   
+   /*
   ALARM cyclic_idle_alarm_100ms
   {
     COUNTER = SysTimerCnt;
@@ -67,11 +67,14 @@ CPU ATMEL_AT91SAM7S256
         APPMODE = appmode1;
     };
   };
-  
+  */
   TASK MotorControlTask
   {
-    AUTOSTART = FALSE;
-    PRIORITY = 3; /* Smaller value means lower priority */
+    AUTOSTART = TRUE
+    {
+    APPMODE = appmode1;
+    };
+    PRIORITY = 2; /* Smaller value means lower priority */
     ACTIVATION = 1;
     SCHEDULE = FULL;
     RESOURCE = dataMutex;
@@ -80,7 +83,10 @@ CPU ATMEL_AT91SAM7S256
 
   TASK DistanceTask
   {
-    AUTOSTART = FALSE;
+    AUTOSTART = TRUE
+    {
+    APPMODE = appmode1;
+    };
     PRIORITY = 3; /* Smaller value means lower priority */
     ACTIVATION = 1;
     SCHEDULE = FULL;
@@ -88,22 +94,12 @@ CPU ATMEL_AT91SAM7S256
     STACKSIZE = 512; /* Stack size */
   };
 
-  TASK ButtonTask
+  TASK IdleTask
   {
     AUTOSTART = TRUE
     {
-      APPMODE = appmode1;
+    APPMODE = appmode1;
     };
-
-    PRIORITY = 10; /* Smaller value means lower priority */
-    ACTIVATION = 1;
-    SCHEDULE = FULL;
-    STACKSIZE = 512; /* Stack size */
-  };
-
-  TASK IdleTask
-  {
-    AUTOSTART = FALSE;
     PRIORITY = 1; /* Smaller value means lower priority */
     ACTIVATION = 1;
     SCHEDULE = FULL;

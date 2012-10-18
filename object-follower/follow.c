@@ -47,7 +47,8 @@ struct objectData
 void display_values(void) {
 	char *message = NULL;
 	U8 line = 0;
-
+	
+	/*
 	display_goto_xy(0, line++);
 	message = "size:";
 	display_string(message);
@@ -59,7 +60,9 @@ void display_values(void) {
 	display_int(xLCD, 3);
 	display_string(",");
 	display_int(yLCD, 3);
-
+*/
+	display_goto_xy(1,1);
+	display_string("Hello");
 	display_update();
 
 }
@@ -144,7 +147,7 @@ int pidController(int d)
 	int out = (Kp*error) + (Ki*integral) + (Kd*derivative);
 	prevError = error;
 
-	out = 50;
+	out = 80;
 	
 	return out;
 }
@@ -185,7 +188,7 @@ TASK(MotorControlTask)
 		if (angle > onlyTurnThrs){
 			scaler = 1;
 			//Just guessing this!!!!!!!!!!!!!!!!!!!
-			motorMaxValue = 50;
+			motorMaxValue = 80;
 		}
 		else{
 			scaler = angle/onlyTurnThrs;
@@ -252,130 +255,9 @@ TASK(DistanceTask) {
 	TerminateTask();
 }
 
-TASK(ButtonTask) {
-
-//	static U8 old_touch_state = 1;
-//	static enum
-//	{
-//		WHITE,
-//		BLACK,
-//		BLUR,
-//		SPEED65,
-//		SPEED68,
-//		SPEED70,
-//		SPEED73,
-//		SPEED74,
-//		SPEED75,
-//		SPEED76,
-//		SPEED77,
-//		SPEED78,
-//		SPEED80,
-//		DONE
-//	}calibration_state = WHITE;
-//	U8 cur_touch_state = 0;
-//	S32 light_value;
-//
-//	startCalibration = ecrobot_get_touch_sensor(PORT_TOUCH_SENSOR);
-//	calibrationLCD = "WHITE";
-//
-//	while(startCalibration == TRUE)
-//	{
-//		cur_touch_state = ecrobot_get_touch_sensor(PORT_TOUCH_SENSOR);
-//
-//		if(ecrobot_is_ENTER_button_pressed())
-//		{
-//			calibration_state = DONE; // go to default state
-//			calibrationLCD = "DONE";
-//		}
-//
-//		light_value = ecrobot_get_light_sensor(PORT_LIGHT_SENSOR);
-//		lightLCD = light_value;
-//
-//		if(cur_touch_state > old_touch_state)
-//		{
-//			switch (calibration_state)
-//			{
-//				case WHITE:
-//				g_white_ref = light_value + WHITE_MARGIN;
-//				calibration_state = BLACK;
-//				calibrationLCD = "BLACK";
-//				break;
-//				case BLACK:
-//				g_black_ref = light_value - BLACK_MARGIN;
-//				calibration_state = BLUR;
-//				calibrationLCD = "BLUR";
-//				break;
-//				case BLUR:
-//				g_blur_ref = light_value;
-//				speed_ref = -65;
-//				calibration_state = SPEED68; // go to speed state
-//				calibrationLCD = "SPEED65";
-//				break;
-//				case SPEED68:
-//				speed_ref = -68;
-//				calibration_state = SPEED70; // go to default state
-//				calibrationLCD = "SPEED68";
-//				break;
-//				case SPEED70:
-//				speed_ref = -70;
-//				calibration_state = SPEED73; // go to default state
-//				calibrationLCD = "SPEED70";
-//				break;
-//				case SPEED73:
-//				speed_ref = -73;
-//				calibration_state = SPEED74; // go to default state
-//				calibrationLCD = "SPEED73";
-//				break;
-//				case SPEED74:
-//				speed_ref = -74;
-//				calibration_state = SPEED75; // go to default state
-//				calibrationLCD = "SPEED74";
-//				break;
-//				case SPEED75:
-//				speed_ref = -75;
-//				calibration_state = SPEED76; // go to default state
-//				calibrationLCD = "SPEED75";
-//				break;
-//				case SPEED76:
-//				speed_ref = -76;
-//				calibration_state = SPEED77; // go to default state
-//				calibrationLCD = "SPEED76";
-//				break;
-//				case SPEED77:
-//				speed_ref = -77;
-//				calibration_state = SPEED78; // go to default state
-//				calibrationLCD = "SPEED77";
-//				break;
-//				case SPEED78:
-//				speed_ref = -78;
-//				calibration_state = SPEED80; // go to default state
-//				calibrationLCD = "SPEED78";
-//				break;
-//				case SPEED80:
-//				speed_ref = -80;
-//				calibration_state = DONE; // go to default state
-//				calibrationLCD = "SPEED80";
-//				break;
-//				default:
-//				interval_calib = MIN((g_blur_ref - g_white_ref),(g_black_ref - g_blur_ref));
-//				startCalibration = FALSE;
-//				break;
-//			}
-//		}
-//		old_touch_state = cur_touch_state;
-//
-//		display_values();
-//
-//		// 10 ms loop
-//		systick_wait_ms(10);
-//
-//	}
-//	WheelsControl(0,0);
-	TerminateTask();
-}
-
-/*Display several information in the screen*/TASK(IdleTask) {
+/*Display several information in the screen*/
+TASK(IdleTask) {
 	display_values();
 
-	TerminateTask();
+	systick_wait_ms(100);
 }
