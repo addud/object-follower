@@ -18,11 +18,6 @@ CPU ATMEL_AT91SAM7S256
   /* Definition of application mode */
   APPMODE appmode1{};
 
-  EVENT TouchOnEvent { MASK = AUTO; };
-  EVENT TouchOffEvent { MASK = AUTO; };
-  EVENT SysSpeedEvent { MASK = AUTO; };
-  EVENT SysStearEvent { MASK = AUTO; };
-
   /*Definition of resource*/
   RESOURCE dataMutex
   {
@@ -51,7 +46,7 @@ CPU ATMEL_AT91SAM7S256
         APPMODE = appmode1;
     };
   };
-   /*
+   
   ALARM cyclic_idle_alarm_100ms
   {
     COUNTER = SysTimerCnt;
@@ -67,7 +62,23 @@ CPU ATMEL_AT91SAM7S256
         APPMODE = appmode1;
     };
   };
-  */
+  
+    ALARM cyclic_idle_alarm_50ms
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = MotorControlTask;
+    };
+    
+  AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 50;
+        APPMODE = appmode1;
+    };
+  };
+  
   TASK MotorControlTask
   {
     AUTOSTART = TRUE
@@ -83,10 +94,7 @@ CPU ATMEL_AT91SAM7S256
 
   TASK DistanceTask
   {
-    AUTOSTART = TRUE
-    {
-    APPMODE = appmode1;
-    };
+    AUTOSTART = FALSE;
     PRIORITY = 3; /* Smaller value means lower priority */
     ACTIVATION = 1;
     SCHEDULE = FULL;
@@ -96,10 +104,7 @@ CPU ATMEL_AT91SAM7S256
 
   TASK IdleTask
   {
-    AUTOSTART = TRUE
-    {
-    APPMODE = appmode1;
-    };
+    AUTOSTART = FALSE;
     PRIORITY = 1; /* Smaller value means lower priority */
     ACTIVATION = 1;
     SCHEDULE = FULL;
