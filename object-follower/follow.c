@@ -14,17 +14,19 @@
 
 #define COLORID					0
 
-#define SIZE_REFERENCE			50
+#define MIN_DETECTED_AREA		100
+
+#define SIZE_REFERENCE			40
 #define POSITION_REFERENCE		83
 
 //Maximum total speed fed to a motor
 #define MAX_SPEED				90
 //Normal speed of without any adjustments from the PID controllers
-#define NORMAL_SPEED			70
+#define NORMAL_SPEED			50
 //Maximum speed where the robot does not move forward
 #define STALL_SPEED				50
 //Speed used for spinning
-#define SPIN_SPEED 				70
+#define SPIN_SPEED 				0
 
 /*Mutex lock for shared object data*/
 DeclareResource(dataMutex);
@@ -119,6 +121,7 @@ object_data_t getData() {
 }
 
 //PID constants for speed control
+//#define dKp 0.2
 #define dKp 0.2
 #define dKi 0
 #define dKd 0
@@ -140,7 +143,7 @@ int directionPIDController(int d) {
 }
 
 //PID constants for speed control
-#define sKp 0.5
+#define sKp 1
 #define sKi 0
 #define sKd 0
 
@@ -220,8 +223,8 @@ TASK(MotorControlTask) {
 	rmotLCD = rightMotorValue;
 
 	//Setting the appropriate speed to the motors
-//	nxt_motor_set_speed(PORT_MOTOR_LEFT, leftMotorValue, 0);
-//	nxt_motor_set_speed(PORT_MOTOR_RIGHT, rightMotorValue, 0);
+	nxt_motor_set_speed(PORT_MOTOR_LEFT, leftMotorValue, 0);
+	nxt_motor_set_speed(PORT_MOTOR_RIGHT, rightMotorValue, 0);
 
 	TerminateTask();
 }
@@ -240,7 +243,7 @@ TASK(DistanceTask) {
 
 		request(PORT_CAMERA);
 
-		rectindex = getbiggestrect(0, -1);
+		rectindex = getbiggestrect(0, MIN_DETECTED_AREA);
 
 		if (rectindex >= 0) {
 
