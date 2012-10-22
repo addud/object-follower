@@ -4,10 +4,13 @@
 
 #define PORT_MOTOR_LEFT			NXT_PORT_B
 #define PORT_MOTOR_RIGHT		NXT_PORT_A
-#define PORT_DISTSENSOR			NXT_PORT_S2
+#define PORT_DISTSENSOR			NXT_PORT_S1
 
 #define DESIRED_DISTANCE 40
 #define TURN_ITERATIONS 10
+
+#define LEFT 0
+#define RIGHT 1
 
 /*Declaring the timer counter*/
 DeclareCounter( SysTimerCnt);
@@ -35,36 +38,58 @@ TASK(MotorControlTask)
 	int periodTime = 50;
 	//Distance to the nearest obstacle
 	int distance;
+	//Flag for object detaction
+	int objectFlag = 0;
 	//Keep track of the turning state
-	int turning=TURN_ITERATIONS;
+	int turningFlag=0;
+	//Keep track of the turning direction
+	int direction = LEFT;
 	
 	while(1)
 	{
 		//Get the distance from the sound sensor
 		distance = ecrobot_get_sonar_sensor(PORT_DISTSENSOR);
 		
-		if ((turning>0 && turning<=TURN_ITERATIONS) || distance<=DESIRED_DISTANCE)
-		{	
+		if (distance<=DESIRED_DISTANCE && turningFlag == 0)
+		{
+			objectFlag = 1;
 			if ((rand() % 101)>=50)
 			{
+				direction = LEFT;
+			}
+			else
+			{
+				direction = LEFT;
+			}
+		}
+		else if (distance>DESIRED_DISTANCE)
+		{
+			objectFlag = 0;
+		}
+		
+		
+		if (objectFlag==1 && turningFlag==0)
+		{	
+			if (direction == RIGHT)
+			{
 				//Turn right
-				nxt_motor_set_speed(PORT_MOTOR_LEFT,50,0);
+				nxt_motor_set_speed(PORT_MOTOR_LEFT,70,0);
 				nxt_motor_set_speed(PORT_MOTOR_RIGHT,0,1);
 			}
 			else
 			{
 				//Turn left
 				nxt_motor_set_speed(PORT_MOTOR_LEFT,0,1);
-				nxt_motor_set_speed(PORT_MOTOR_RIGHT,50,0);
+				nxt_motor_set_speed(PORT_MOTOR_RIGHT,70,0);
 			}
-			turning++;
+			turningFlag++;
 		}
-		else if (turning>=TURN_ITERATIONS)
+		else if (objectFlag==0 && turningFlag==1)
 		{
 			//Setting a constant speed to the motors
-			nxt_motor_set_speed(PORT_MOTOR_LEFT,50,0);
-			nxt_motor_set_speed(PORT_MOTOR_RIGHT,50,0);
-			turning=0;
+			nxt_motor_set_speed(PORT_MOTOR_LEFT,70,0);
+			nxt_motor_set_speed(PORT_MOTOR_RIGHT,70,0); 
+			turningFlag = 0;
 		}
 		systick_wait_ms(periodTime);
 	}
