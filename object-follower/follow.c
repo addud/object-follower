@@ -14,19 +14,19 @@
 
 #define COLORID					0
 
-#define MIN_DETECTED_AREA		100
+#define MIN_DETECTED_AREA		-1
 
-#define SIZE_REFERENCE			40
+#define SIZE_REFERENCE			50
 #define POSITION_REFERENCE		83
 
 //Maximum total speed fed to a motor
-#define MAX_SPEED				90
+#define MAX_SPEED				100
 //Normal speed of without any adjustments from the PID controllers
 #define NORMAL_SPEED			50
 //Maximum speed where the robot does not move forward
 #define STALL_SPEED				50
 //Speed used for spinning
-#define SPIN_SPEED 				0
+#define SPIN_SPEED 				65
 
 /*Mutex lock for shared object data*/
 DeclareResource(dataMutex);
@@ -47,7 +47,8 @@ typedef struct {
 static U8 startCalibration = FALSE;
 
 // global variables used to display information
-static int sizeLCD, xLCD, speedLCD, devspeedLCD, diradjLCD, lmotLCD, rmotLCD;
+static int sizeLCD, areaLCD, xLCD, speedLCD, devspeedLCD, diradjLCD, lmotLCD,
+		rmotLCD;
 
 object_data_t objData = { 0, 0 };
 
@@ -59,6 +60,11 @@ void display_values(void) {
 	message = "size:";
 	display_string(message);
 	display_int(sizeLCD, 4);
+
+	display_goto_xy(0, line++);
+	message = "area:";
+	display_string(message);
+	display_int(areaLCD, 5);
 
 	display_goto_xy(0, line++);
 	message = "pos:";
@@ -143,7 +149,7 @@ int directionPIDController(int d) {
 }
 
 //PID constants for speed control
-#define sKp 1
+#define sKp 1.5
 #define sKi 0
 #define sKd 0
 
@@ -262,6 +268,7 @@ TASK(DistanceTask) {
 			ReleaseResource(dataMutex);
 
 			sizeLCD = size;
+			areaLCD = area;
 			xLCD = x;
 
 		}

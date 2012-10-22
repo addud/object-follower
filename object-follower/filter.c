@@ -10,7 +10,7 @@
 #include "filter.h"
 
 #define STOPPER 0                                      /* Smaller than any datum */
-#define MEDIAN_FILTER_SIZE    (10)						/* Size of the filter window */
+#define MEDIAN_FILTER_SIZE    (15)						/* Size of the filter window */
 
 /* ---------------------------------------------------------------------------
  ** Implements a median filter for the values read from the camera.
