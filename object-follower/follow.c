@@ -148,8 +148,8 @@ int directionPIDController(int d) {
 	return out;
 }
 
-int getDistance(size) {
-	int distance = -3 * size + 140;
+int getDistance(int size) {
+	int distance = -2 * size + 102;
 	return distance;
 }
 
@@ -169,14 +169,13 @@ TASK(MotorControlTask) {
 	int rightMotorValue;
 
 	//Alfa Beta filter values
-	float dk_1 = 0, vk_1 = 0, a = 0.85, b = 0.005, dt = 0.05;
+	float dk_1 = 0, vk_1 = 0, a = 0.85, b = 0.030, dt = 0.05;
 	float dk, vk, rk, dm;
 
 	data = getData();
 	size = data.size;
 	position = data.position;
 
-	//Get the distance!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	dm = getDistance(size) - 20;
 
 	dk = dk_1 + ( vk_1 * dt );
