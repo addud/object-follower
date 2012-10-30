@@ -7,6 +7,8 @@
 #include "filter.h"
 #include "lib.h"
 
+//Checking if I understand git...
+
 #define PORT_TOUCH_SENSOR		NXT_PORT_S1
 #define PORT_MOTOR_LEFT			NXT_PORT_B
 #define PORT_MOTOR_RIGHT		NXT_PORT_A
