@@ -7,8 +7,6 @@
 #include "filter.h"
 #include "lib.h"
 
-//Checking if I understand git...
-
 #define PORT_TOUCH_SENSOR		NXT_PORT_S1
 #define PORT_MOTOR_LEFT			NXT_PORT_B
 #define PORT_MOTOR_RIGHT		NXT_PORT_A
@@ -150,25 +148,9 @@ int directionPIDController(int d) {
 	return out;
 }
 
-//PID constants for speed control
-#define sKp 1.5
-#define sKi 0
-#define sKd 0
-
-//Returns the calculated adjustment according to desired speed
-//It is applied on top of the NORMAL_SPEED
-int speedPIDController(int d) {
-	// Static vars where the PID values are accumulated
-	static int integral = 0;
-	static int prevError = 0;
-
-	int error = (SIZE_REFERENCE - d);
-	integral += error;
-	int derivative = error - prevError;
-	int out = (sKp * error) + (sKi * integral) + (sKd * derivative);
-	prevError = error;
-
-	return out;
+int getDistance(size) {
+	int distance = -3 * size + 140;
+	return distance;
 }
 
 /**********************************************************************/
@@ -186,15 +168,33 @@ TASK(MotorControlTask) {
 	int leftMotorValue;
 	int rightMotorValue;
 
+	//Alfa Beta filter values
+	float dk_1 = 0, vk_1 = 0, a = 0.85, b = 0.005, dt = 0.05;
+	float dk, vk, rk, dm;
+
 	data = getData();
 	size = data.size;
 	position = data.position;
 
+	//Get the distance!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	dm = getDistance(size) - 20;
+
+	dk = dk_1 + ( vk_1 * dt );
+	vk = vk_1;
+
+	rk = dm - dk;
+
+	dk += a * rk;
+	vk += ( b * rk ) / dt;
+
+	dk_1 = dk;
+	vk_1 = vk;
+
 	if (size > 0 && position > 0) {
 
-		//If an object was detected we apply the PID control
+		//If an object was detected we apply the alfa-beta filter
 
-		int speed_deviation = speedPIDController(size);
+		int speed_deviation = vk;
 		devspeedLCD = speed_deviation;
 
 		new_speed = NORMAL_SPEED + speed_deviation;
