@@ -18,6 +18,7 @@
 
 #define SIZE_REFERENCE			50
 #define POSITION_REFERENCE		83
+#define DESIRED_DISTANCE		20
 
 //Maximum total speed fed to a motor
 #define MAX_SPEED				100
@@ -126,6 +127,39 @@ object_data_t getData() {
 	return temp;
 }
 
+int getDistance(int size) {
+	int distance = -2 * size + 102;
+	return distance;
+}
+
+int getAngle(int pixels) {
+	int angle;
+	int k = 35;
+	int m = 3100;
+	return angle = (k * pixels + m)/100;
+}
+
+//PID constants for speed control
+#define sKp 1.5
+#define sKi 0
+#define sKd 0
+
+//Returns the calculated adjustment according to desired speed
+//It is applied on top of the NORMAL_SPEED
+int speedPIDController(int d) {
+	// Static vars where the PID values are accumulated
+	static int integral = 0;
+	static int prevError = 0;
+
+	int error = (d - DESIRED_DISTANCE);
+	integral += error;
+	int derivative = error - prevError;
+	int out = (sKp * error) + (sKi * integral) + (sKd * derivative);
+	prevError = error;
+
+	return out;
+}
+
 //PID constants for speed control
 //#define dKp 0.2
 #define dKp 0.2
@@ -148,35 +182,13 @@ int directionPIDController(int d) {
 	return out;
 }
 
-int getDistance(int size) {
-	int distance = -2 * size + 102;
-	return distance;
-}
-
-/**********************************************************************/
-
-TASK(MotorControlTask) {
-
-	//The current object data
-	object_data_t data;
-
-	//Distance to the object
-	int position, size;
-	int new_speed, direction_adjustment;
-
-	//Motor speed values
-	int leftMotorValue;
-	int rightMotorValue;
-
+int speedFilter(int size) {
 	//Alfa Beta filter values
-	float dk_1 = 0, vk_1 = 0, a = 0.85, b = 0.030, dt = 0.05;
-	float dk, vk, rk, dm;
+	float dk_1 = 0, vk_1 = 0, a = 0.85, b = 0.010, dt = 0.05;
+	float dk, vk, rk;
+	int dm;
 
-	data = getData();
-	size = data.size;
-	position = data.position;
-
-	dm = getDistance(size) - 20;
+	dm = getDistance(size);
 
 	dk = dk_1 + ( vk_1 * dt );
 	vk = vk_1;
@@ -189,18 +201,70 @@ TASK(MotorControlTask) {
 	dk_1 = dk;
 	vk_1 = vk;
 
+	return dk;
+}
+
+int turnFilter(int size) {
+	//Alfa Beta filter values
+	float dk_1 = 0, vk_1 = 0, a = 0.85, b = 0.010, dt = 0.05;
+	float dk, vk, rk;
+	int dm;
+
+	dm = getDistance(size);
+
+	dk = dk_1 + ( vk_1 * dt );
+	vk = vk_1;
+
+	rk = dm - dk;
+
+	dk += a * rk;
+	vk += ( b * rk ) / dt;
+
+	dk_1 = dk;
+	vk_1 = vk;
+
+	return dk;
+}
+
+/**********************************************************************/
+
+TASK(MotorControlTask) {
+
+	//The current object data
+	object_data_t data;
+
+	//Distance to the object
+	int position, size;
+	int new_speed, direction_adjustment;
+	int distEstimate;
+	int directionEstimate;
+
+	//Motor speed values
+	int leftMotorValue;
+	int rightMotorValue;
+
+	data = getData();
+	size = data.size;
+	position = data.position;
+
+	//Estimate the distance and deviation form the tracker
+	distEstimate = speedFilter(size);
+
+	directionEstimate = turnFilter(position);
+
+
 	if (size > 0 && position > 0) {
 
 		//If an object was detected we apply the alfa-beta filter
 
-		int speed_deviation = vk;
+		int speed_deviation = speedPIDController(distEstimate);
 		devspeedLCD = speed_deviation;
 
 		new_speed = NORMAL_SPEED + speed_deviation;
 		//Trimming
 		new_speed = (new_speed > MAX_SPEED) ? MAX_SPEED : new_speed;
 
-		direction_adjustment = directionPIDController(position);
+		direction_adjustment = directionPIDController(directionEstimate);
 
 		speedLCD = new_speed;
 		diradjLCD = direction_adjustment;
