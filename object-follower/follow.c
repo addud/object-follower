@@ -22,6 +22,8 @@
 
 //Maximum total speed fed to a motor
 #define MAX_SPEED				100
+//Minimum total speed fed to a motor
+#define MIN_SPEED				-100
 //Normal speed of without any adjustments from the PID controllers
 #define NORMAL_SPEED			50
 //Maximum speed where the robot does not move forward
@@ -260,9 +262,10 @@ TASK(MotorControlTask) {
 		int speed_deviation = speedPIDController(distEstimate);
 		devspeedLCD = speed_deviation;
 
-		new_speed = NORMAL_SPEED + speed_deviation;
+		new_speed = (speed_deviation >= 0) ? NORMAL_SPEED + speed_deviation : -NORMAL_SPEED + speed_deviation;
 		//Trimming
 		new_speed = (new_speed > MAX_SPEED) ? MAX_SPEED : new_speed;
+		new_speed = (new_speed < MIN_SPEED) ? MIN_SPEED : new_speed;
 
 		direction_adjustment = directionPIDController(directionEstimate);
 
@@ -271,13 +274,13 @@ TASK(MotorControlTask) {
 
 		leftMotorValue = new_speed - direction_adjustment;
 		//Trimming
-		leftMotorValue =
-				(leftMotorValue > MAX_SPEED) ? MAX_SPEED : leftMotorValue;
+		leftMotorValue = (leftMotorValue > MAX_SPEED) ? MAX_SPEED : leftMotorValue; //Never going to happen?
+		leftMotorValue = (leftMotorValue < MIN_SPEED) ? MIN_SPEED : leftMotorValue;
 
 		rightMotorValue = new_speed + direction_adjustment;
 		//Trimming
-		rightMotorValue =
-				(rightMotorValue > MAX_SPEED) ? MAX_SPEED : rightMotorValue;
+		rightMotorValue = (rightMotorValue > MAX_SPEED) ? MAX_SPEED : rightMotorValue;
+		rightMotorValue = (rightMotorValue < MIN_SPEED) ? MIN_SPEED : rightMotorValue;
 
 	} else {
 
