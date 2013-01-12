@@ -130,7 +130,7 @@ object_data_t getData() {
 }
 
 int getDistance(int size) {
-	int distance = -2 * size + 102;
+	int distance = (-150 * size + 8000) / 100;
 	return distance;
 }
 
@@ -142,9 +142,9 @@ int getAngle(int pixels) {
 }
 
 //PID constants for speed control
-#define sKp 1.5
-#define sKi 0
-#define sKd 0
+#define sKp 1.0
+#define sKi 0.002
+#define sKd 0.00001
 
 //Returns the calculated adjustment according to desired speed
 //It is applied on top of the NORMAL_SPEED
@@ -162,7 +162,7 @@ int speedPIDController(int d) {
 	return out;
 }
 
-//PID constants for speed control
+//PID constants for direction control
 //#define dKp 0.2
 #define dKp 0.2
 #define dKi 0
@@ -184,13 +184,13 @@ int directionPIDController(int d) {
 	return out;
 }
 
-int speedFilter(int size) {
+int speedFilter(int distance) {
 	//Alfa Beta filter values
-	float dk_1 = 0, vk_1 = 0, a = 0.85, b = 0.010, dt = 0.05;
+	float dk_1 = 0, vk_1 = 0, a = 1.0, b = 0.4, dt = 0.05;
 	float dk, vk, rk;
 	int dm;
 
-	dm = getDistance(size);
+	dm = distance;
 
 	dk = dk_1 + ( vk_1 * dt );
 	vk = vk_1;
@@ -208,7 +208,7 @@ int speedFilter(int size) {
 
 int turnFilter(int size) {
 	//Alfa Beta filter values
-	float dk_1 = 0, vk_1 = 0, a = 0.85, b = 0.010, dt = 0.05;
+	float dk_1 = 0, vk_1 = 0, a = 0.085, b = 0.010, dt = 0.05;
 	float dk, vk, rk;
 	int dm;
 
@@ -240,6 +240,7 @@ TASK(MotorControlTask) {
 	int new_speed, direction_adjustment;
 	int distEstimate;
 	int directionEstimate;
+	int distance;
 
 	//Motor speed values
 	int leftMotorValue;
@@ -249,8 +250,10 @@ TASK(MotorControlTask) {
 	size = data.size;
 	position = data.position;
 
+	distance = getDistance(size);
+
 	//Estimate the distance and deviation form the tracker
-	distEstimate = speedFilter(size);
+	distEstimate = speedFilter(distance);
 
 	directionEstimate = turnFilter(position);
 
@@ -267,10 +270,14 @@ TASK(MotorControlTask) {
 		new_speed = (new_speed > MAX_SPEED) ? MAX_SPEED : new_speed;
 		new_speed = (new_speed < MIN_SPEED) ? MIN_SPEED : new_speed;
 
-		direction_adjustment = directionPIDController(directionEstimate);
+		direction_adjustment = directionPIDController(position);
 
 		speedLCD = new_speed;
 		diradjLCD = direction_adjustment;
+
+		//Used when tuning alfa beta filter
+		//speedLCD = distance;
+		//diradjLCD = distEstimate;
 
 		leftMotorValue = new_speed - direction_adjustment;
 		//Trimming
@@ -289,8 +296,8 @@ TASK(MotorControlTask) {
 		speedLCD = 0;
 		diradjLCD = 0;
 		devspeedLCD = 0;
-		rightMotorValue = SPIN_SPEED;
-		leftMotorValue = -SPIN_SPEED;
+		rightMotorValue = 0;//SPIN_SPEED;
+		leftMotorValue = 0;//-SPIN_SPEED;
 	}
 
 	lmotLCD = leftMotorValue;
