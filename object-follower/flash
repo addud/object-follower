@@ -1,3 +1,5 @@
+echo Compiling follow.c
+make all
 echo Executing NeXTTool to upload follow.rxe...
 sudo ../NeXTTool /COM=usb -download=follow.rxe
 sudo ../NeXTTool /COM=usb -listfiles=follow.rxe
