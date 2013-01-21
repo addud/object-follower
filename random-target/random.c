@@ -38,10 +38,13 @@ TASK(MotorControlTask)
 	int periodTime = 50;
 	//Distance to the nearest obstacle
 	int distance;
-	//Flag for object detaction
+	//Flag for object detection
 	int objectFlag = 0;
-	//Keep track of the turning state
-	int turningFlag=0;
+	//Random movement speeds
+	int randomSpeedLeft = 0;
+	int randomSpeedRight = 0;
+	//Random movement time counter
+	int randomCounter = 0;
 	//Keep track of the turning direction
 	int direction = LEFT;
 	
@@ -50,17 +53,17 @@ TASK(MotorControlTask)
 		//Get the distance from the sound sensor
 		distance = ecrobot_get_sonar_sensor(PORT_DISTSENSOR);
 		
-		if (distance<=DESIRED_DISTANCE && turningFlag == 0)
+		if (distance<=DESIRED_DISTANCE)
 		{
+			if (objectFlag == 0 && (rand() % 101)>=50)
+			{
+				direction = LEFT;
+			}
+			else if (objectFlag == 0)
+			{
+				direction = RIGHT;
+			}
 			objectFlag = 1;
-			if ((rand() % 101)>=50)
-			{
-				direction = LEFT;
-			}
-			else
-			{
-				direction = LEFT;
-			}
 		}
 		else if (distance>DESIRED_DISTANCE)
 		{
@@ -68,7 +71,7 @@ TASK(MotorControlTask)
 		}
 		
 		
-		if (objectFlag==1 && turningFlag==0)
+		if (objectFlag==1)
 		{	
 			if (direction == RIGHT)
 			{
@@ -82,14 +85,31 @@ TASK(MotorControlTask)
 				nxt_motor_set_speed(PORT_MOTOR_LEFT,0,1);
 				nxt_motor_set_speed(PORT_MOTOR_RIGHT,70,0);
 			}
-			turningFlag++;
 		}
-		else if (objectFlag==0 && turningFlag==1)
+		else
 		{
-			//Setting a constant speed to the motors
-			nxt_motor_set_speed(PORT_MOTOR_LEFT,70,0);
-			nxt_motor_set_speed(PORT_MOTOR_RIGHT,70,0); 
-			turningFlag = 0;
+			//Setting a random speed to the motors
+
+			if (randomCounter == 40){
+				srand(randomSpeedRight);
+				randomSpeedLeft = (rand() % 20) - 5;
+				srand(randomSpeedLeft);
+				randomSpeedRight = (rand() % 20) - 5;
+				randomCounter = 0;
+			}
+			else{
+				randomCounter++;
+			}
+
+			//If the left wheel are going backwards, lets reverse instead!
+			if (randomSpeedLeft < 0 && randomSpeedLeft > -6){
+				randomSpeedLeft = -140 + randomSpeedLeft;
+				randomSpeedRight = -140 + randomSpeedRight;
+			}
+
+			nxt_motor_set_speed(PORT_MOTOR_LEFT,70 + randomSpeedLeft,0);
+			nxt_motor_set_speed(PORT_MOTOR_RIGHT,70 + randomSpeedRight,0);
+
 		}
 		systick_wait_ms(periodTime);
 	}
