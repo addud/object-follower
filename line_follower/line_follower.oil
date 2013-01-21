@@ -1,0 +1,96 @@
+#include "implementation.oil"
+
+CPU ATMEL_AT91SAM7S256
+{
+  OS LEJOS_OSEK
+  {
+    STATUS = EXTENDED;
+    STARTUPHOOK = FALSE;
+    ERRORHOOK = FALSE;
+    SHUTDOWNHOOK = FALSE;
+    PRETASKHOOK = FALSE;
+    POSTTASKHOOK = FALSE;
+    USEGETSERVICEID = FALSE;
+    USEPARAMETERACCESS = FALSE;
+    USERESSCHEDULER = FALSE;
+  };
+
+  /* Definition of application mode */
+  APPMODE appmode1{};
+
+  EVENT TouchOnEvent { MASK = AUTO; };
+  EVENT TouchOffEvent { MASK = AUTO; };
+  EVENT SysSpeedEvent { MASK = AUTO; };
+  EVENT SysStearEvent { MASK = AUTO; };
+
+  COUNTER SysTimerCnt
+  {
+    MINCYCLE = 1;
+    MAXALLOWEDVALUE = 10000;
+    TICKSPERBASE = 1; /* One tick is equal to 1msec */
+  };
+
+  
+  ALARM cyclic_light_alarm_5ms
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = LightTask;
+    };
+    
+  AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 1;
+        APPMODE = appmode1;
+    };
+  };
+  
+  ALARM cyclic_idle_alarm_100ms
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = IdleTask;
+    };
+    
+  AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 100;
+        APPMODE = appmode1;
+    };
+  };
+
+  TASK LightTask
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 5; /* Smaller value means lower priority */
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */
+  };
+
+  TASK ButtonTask
+  {
+    AUTOSTART = TRUE
+    {
+      APPMODE = appmode1;
+    };
+
+    PRIORITY = 10; /* Smaller value means lower priority */
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */
+  };
+
+  TASK IdleTask
+  {
+    AUTOSTART = FALSE;
+    PRIORITY = 1; /* Smaller value means lower priority */
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    STACKSIZE = 512; /* Stack size */
+  };
+};
