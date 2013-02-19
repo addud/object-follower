@@ -6,8 +6,8 @@
 #define PORT_MOTOR_RIGHT		NXT_PORT_A
 #define PORT_DISTSENSOR			NXT_PORT_S1
 
+//Distance to an object before initiating turn
 #define DESIRED_DISTANCE 40
-#define TURN_ITERATIONS 10
 
 #define LEFT 0
 #define RIGHT 1
@@ -36,15 +36,19 @@ TASK(MotorControlTask)
 {
 	//Period time of the task in ms
 	int periodTime = 50;
+
 	//Distance to the nearest obstacle
 	int distance;
-	//Flag for object detection
+
+	//Flag for object detection, 1 => object detected
 	int objectFlag = 0;
 	//Random movement speeds
 	int randomSpeedLeft = 0;
 	int randomSpeedRight = 0;
+
 	//Random movement time counter
 	int randomCounter = 0;
+
 	//Keep track of the turning direction
 	int direction = LEFT;
 	
@@ -53,8 +57,10 @@ TASK(MotorControlTask)
 		//Get the distance from the sound sensor
 		distance = ecrobot_get_sonar_sensor(PORT_DISTSENSOR);
 		
+		//Obstacle detection
 		if (distance<=DESIRED_DISTANCE)
 		{
+			//If a turn is not initiated, turn left or right
 			if (objectFlag == 0 && (rand() % 101)>=50)
 			{
 				direction = LEFT;
@@ -65,12 +71,14 @@ TASK(MotorControlTask)
 			}
 			objectFlag = 1;
 		}
+
+		//If no object is present, reset the flag
 		else if (distance>DESIRED_DISTANCE)
 		{
 			objectFlag = 0;
 		}
 		
-		
+		//An object is present, send command to motors for turning
 		if (objectFlag==1)
 		{	
 			if (direction == RIGHT)
@@ -86,10 +94,11 @@ TASK(MotorControlTask)
 				nxt_motor_set_speed(PORT_MOTOR_RIGHT,70,0);
 			}
 		}
+
+		//If no object is present:
 		else
 		{
-			//Setting a random speed to the motors
-
+			//Setting a random speed to the motors every 2 seconds (randomCounter*periodTime)
 			if (randomCounter == 40){
 				srand(randomSpeedRight);
 				randomSpeedLeft = (rand() % 20) - 5;
