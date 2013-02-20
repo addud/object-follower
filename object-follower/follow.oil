@@ -24,19 +24,13 @@ CPU ATMEL_AT91SAM7S256
 	RESOURCEPROPERTY = STANDARD;
   };
 
-  COUNTER SysTimerCnt
-  {
-    MINCYCLE = 1;
-    MAXALLOWEDVALUE = 10000;
-    TICKSPERBASE = 1; /* One tick is equal to 1msec */
-  };
 
-  ALARM cyclic_distance_alarm_30ms
+  ALARM cyclic_acquisition_alarm_30ms
   {
     COUNTER = SysTimerCnt;
     ACTION = ACTIVATETASK
     {
-        TASK = DistanceTask;
+        TASK = AcquisitionTask;
     };
     
   AUTOSTART = TRUE
@@ -46,29 +40,24 @@ CPU ATMEL_AT91SAM7S256
         APPMODE = appmode1;
     };
   };
-   
-  ALARM cyclic_idle_alarm_100ms
+  
+  TASK AcquisitionTask
   {
-    COUNTER = SysTimerCnt;
-    ACTION = ACTIVATETASK
-    {
-        TASK = IdleTask;
-    };
-    
-  AUTOSTART = TRUE
-    {
-        ALARMTIME = 1;
-        CYCLETIME = 100;
-        APPMODE = appmode1;
-    };
+    AUTOSTART = FALSE;
+    PRIORITY = 3; /* Smaller value means lower priority */
+    ACTIVATION = 1;
+    SCHEDULE = FULL;
+    RESOURCE = dataMutex;
+    STACKSIZE = 512; /* Stack size */
   };
   
-    ALARM cyclic_motorcontrol_alarm_50ms
+  
+  ALARM cyclic_control_alarm_50ms
   {
     COUNTER = SysTimerCnt;
     ACTION = ACTIVATETASK
     {
-        TASK = MotorControlTask;
+        TASK = ControlTask;
     };
     
   AUTOSTART = TRUE
@@ -77,9 +66,8 @@ CPU ATMEL_AT91SAM7S256
         CYCLETIME = 50;
         APPMODE = appmode1;
     };
-  };
-  
-  TASK MotorControlTask
+  };  
+  TASK ControlTask
   {
     AUTOSTART = TRUE
     {
@@ -92,17 +80,24 @@ CPU ATMEL_AT91SAM7S256
     STACKSIZE = 512; /* Stack size */
   };
 
-  TASK DistanceTask
-  {
-    AUTOSTART = FALSE;
-    PRIORITY = 3; /* Smaller value means lower priority */
-    ACTIVATION = 1;
-    SCHEDULE = FULL;
-    RESOURCE = dataMutex;
-    STACKSIZE = 512; /* Stack size */
-  };
 
-  TASK IdleTask
+  ALARM cyclic_display_alarm_100ms
+  {
+    COUNTER = SysTimerCnt;
+    ACTION = ACTIVATETASK
+    {
+        TASK = DisplayTask;
+    };
+    
+  AUTOSTART = TRUE
+    {
+        ALARMTIME = 1;
+        CYCLETIME = 100;
+        APPMODE = appmode1;
+    };
+  };
+  
+  TASK DisplayTask
   {
     AUTOSTART = FALSE;
     PRIORITY = 1; /* Smaller value means lower priority */

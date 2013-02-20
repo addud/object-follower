@@ -1,12 +1,11 @@
-/**
- ******************************************************************************
- **	FILE NAME : NxtCam.h
+/* ---------------------------------------------------------------------------
+ ** camera.h
  **
- **	ABSTRACT  : Mindsensors NxtCam driver for NxtOsek.
+ ** Mindsensors NxtCam driver for NxtOsek.
  **
+ ** Author: Adrian Dudau
  ** Acknowledgments: based on code from Takashi Chikamasa for the i2C communication.
- *******************************************************************************
- **/
+ ** -------------------------------------------------------------------------*/
 
 //#include "kernel.h"
 //#include "kernel_id.h"

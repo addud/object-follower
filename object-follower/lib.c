@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------------
- ** filter.c
+ ** lib.c
  **
  ** This file is a collection of useful functions
  **
