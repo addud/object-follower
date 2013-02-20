@@ -19,7 +19,6 @@
 #define MIN_DETECTED_AREA		-1
 
 /* References for the control algorithms */
-#define SIZE_REFERENCE			50
 #define POSITION_REFERENCE		83
 #define DESIRED_DISTANCE		20
 
