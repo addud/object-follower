@@ -13,7 +13,7 @@
 typedef int data_t;
 
 data_t median_filter(data_t datum);
-
+int alfabeta_filter(int dm);
 
 
 

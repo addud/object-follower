@@ -100,4 +100,23 @@ data_t median_filter(data_t datum) {
 	return median->value;
 }
 
+int alfabeta_filter(int dm) {
+	//Alfa Beta filter values
+	static float dk_1 = 0, vk_1 = 0;
+	float a = 0.2, b = 0.00005, dt = 0.05;
+	float dk, vk, rk;
+
+	dk = dk_1 + ( vk_1 * dt );
+	vk = vk_1;
+
+	rk = dm - dk;
+
+	dk += a * rk;
+	vk += ( b * rk ) / dt;
+
+	dk_1 = dk;
+	vk_1 = vk;
+
+	return dk;
+}
 

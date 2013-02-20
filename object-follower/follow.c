@@ -12,26 +12,44 @@
 #define PORT_MOTOR_RIGHT		NXT_PORT_A
 #define PORT_CAMERA				NXT_PORT_S2
 
+/* Used to select between simple and advanced control */
+#define SIMPLE_DISTANCE_CONTROL		0
+#define SIMPLE_DIRECTION_CONTROL	0
+
+/* Constants used in the simple control algorithm */
+#define SIMPLE_SPEED			80
+#define SIMPLE_TURN				10
+#define DISTANCE_RANGE			10
+#define DIRECTION_RANGE			20
+
 /* Camera color id of the tracked object */
 #define COLORID					0
 
 /* Minimum dectected area recognized as an object by the camera */
-#define MIN_DETECTED_AREA		-1
+#define MIN_DETECTED_AREA		25
 
 /* References for the control algorithms */
 #define POSITION_REFERENCE		83
-#define DESIRED_DISTANCE		20
+#define DESIRED_DISTANCE		30
+
+#define ABS(x)           (((x) < 0) ? -(x) : (x))
 
 /* Maximum total speed fed to a motor */
 #define MAX_SPEED				100
 /* Minimum total speed fed to a motor */
 #define MIN_SPEED				-100
+
+#define DISTANCE_MAX_SPEED		80
+#define DISTANCE_MIN_SPEED		-80
+
 /* Normal speed of without any adjustments from the PID controllers */
 #define NORMAL_SPEED			50
 /* Maximum speed where the robot does not move forward */
 #define STALL_SPEED				50
 /* Speed used for spinning */
 #define SPIN_SPEED 				65
+/* Treshhold to filter too small derivative part */
+#define dTRESHOLD				40
 
 /* Mutex lock for shared object data */
 DeclareResource(dataMutex);
@@ -52,7 +70,6 @@ static int sizeLCD, areaLCD, xLCD, speedLCD, devspeedLCD, diradjLCD, lmotLCD,
 
 /* Resource containing acquired data. Protected by mutex */
 object_data_t objData = { 0, 0 };
-
 
 /* Device initialization */
 void ecrobot_device_initialize() {
@@ -124,14 +141,19 @@ object_data_t getData() {
  * Empirical approximation.
  */
 int getDistance(int size) {
-	int distance = -2 * size + 102;
+	int distance;
+
+	distance = size ? (1000/size) : 0;
+
 	return distance;
 }
 
+#if SIMPLE_DISTANCE_CONTROL == 0
+
 /* PID constants for speed control */
-#define sKp 1.5
-#define sKi 0
-#define sKd 0
+#define sKp 2.0//2.7
+#define sKi 1.5//1.5
+#define sKd 2.2//2.2
 
 /* Returns the calculated adjustment according to desired speed
  * It is applied on top of the NORMAL_SPEED
@@ -142,14 +164,45 @@ int speedPIDController(int d) {
 	static int prevError = 0;
 
 	int error = (d - DESIRED_DISTANCE);
-	integral += error;
-	int derivative = error - prevError;
+	int derivative = 0;
+
+	derivative = (error - prevError) * 20;
+	if(derivative < dTRESHOLD){
+		derivative = 0;
+	}
+
+	if (d == 0) {
+		integral = 0;
+		prevError = 0;
+	}
+	else {
+		if (ABS(integral + error/20)*sKi < 15 ) {  //15
+			integral += error/20;
+		}
+		prevError = error;
+	}
+
 	int out = (sKp * error) + (sKi * integral) + (sKd * derivative);
-	prevError = error;
 
 	return out;
 }
 
+#else
+int speedPIDController(int d) {
+	if (d < DESIRED_DISTANCE - DISTANCE_RANGE)
+		return -SIMPLE_SPEED;
+	else if (d > DESIRED_DISTANCE + DISTANCE_RANGE)
+		return SIMPLE_SPEED;
+	else
+		return 0;
+}
+
+int speedFilter(int distance) {
+	return distance;
+}
+#endif
+
+#if SIMPLE_DIRECTION_CONTROL == 0
 /* PID constants for direction control */
 #define dKp 0.2
 #define dKi 0
@@ -172,49 +225,17 @@ int directionPIDController(int d) {
 	return out;
 }
 
-int speedFilter(int size) {
-	//Alfa Beta filter values
-	float dk_1 = 0, vk_1 = 0, a = 0.85, b = 0.010, dt = 0.05;
-	float dk, vk, rk;
-	int dm;
+#else
 
-	dm = getDistance(size);
-
-	dk = dk_1 + ( vk_1 * dt );
-	vk = vk_1;
-
-	rk = dm - dk;
-
-	dk += a * rk;
-	vk += ( b * rk ) / dt;
-
-	dk_1 = dk;
-	vk_1 = vk;
-
-	return dk;
+int directionPIDController(int d) {
+	if (d > POSITION_REFERENCE - DIRECTION_RANGE)
+		return -SIMPLE_TURN;
+	else if (d < POSITION_REFERENCE + DIRECTION_RANGE)
+		return SIMPLE_TURN;
+	else
+		return 0;
 }
-
-int turnFilter(int size) {
-	//Alfa Beta filter values
-	float dk_1 = 0, vk_1 = 0, a = 0.85, b = 0.010, dt = 0.05;
-	float dk, vk, rk;
-	int dm;
-
-	dm = getDistance(size);
-
-	dk = dk_1 + ( vk_1 * dt );
-	vk = vk_1;
-
-	rk = dm - dk;
-
-	dk += a * rk;
-	vk += ( b * rk ) / dt;
-
-	dk_1 = dk;
-	vk_1 = vk;
-
-	return dk;
-}
+#endif
 
 /* Apply control algorithm on the acquired data and then output to motors */
 TASK(ControlTask) {
@@ -226,7 +247,7 @@ TASK(ControlTask) {
 	int position, size;
 	int new_speed, direction_adjustment;
 	int distEstimate;
-	int directionEstimate;
+	int distance;
 
 	//Motor speed values
 	int leftMotorValue;
@@ -236,9 +257,10 @@ TASK(ControlTask) {
 	size = data.size;
 	position = data.position;
 
+	distance = getDistance(size);
+
 	//Estimate the distance and deviation form the tracker
-	distEstimate = speedFilter(size);
-	directionEstimate = turnFilter(position);
+	distEstimate = alfabeta_filter(distance);
 
 	if (size > 0 && position > 0) {
 
@@ -247,18 +269,17 @@ TASK(ControlTask) {
 		int speed_deviation = speedPIDController(distEstimate);
 		devspeedLCD = speed_deviation;
 
-		//Calculate new speed based on the distance to the object
 		new_speed = (speed_deviation >= 0) ? NORMAL_SPEED + speed_deviation : -NORMAL_SPEED + speed_deviation;
+		
 		//Trimming
-		new_speed = (new_speed > MAX_SPEED) ? MAX_SPEED : new_speed;
-		new_speed = (new_speed < MIN_SPEED) ? MIN_SPEED : new_speed;
+		new_speed = (new_speed > DISTANCE_MAX_SPEED) ? DISTANCE_MAX_SPEED : new_speed;
+		new_speed = (new_speed < DISTANCE_MIN_SPEED) ? DISTANCE_MIN_SPEED : new_speed;
 
-		//Calculate speed adjustment to adjust direction
-		direction_adjustment = directionPIDController(directionEstimate);
+		direction_adjustment = directionPIDController(position);
 
-		//Update display values
-		speedLCD = new_speed;
-		diradjLCD = direction_adjustment;
+		//Used when tuning alfa beta filter
+		speedLCD = distance;
+		diradjLCD = distEstimate;
 
 		leftMotorValue = new_speed - direction_adjustment;
 
@@ -282,6 +303,9 @@ TASK(ControlTask) {
 		speedLCD = 0;
 		diradjLCD = 0;
 		devspeedLCD = 0;
+
+		//Reset static PID values
+		(void)speedPIDController(0);
 	}
 
 	//Update display values
@@ -317,19 +341,19 @@ void display_values(void) {
 	display_int(xLCD, 4);
 
 	display_goto_xy(0, line++);
-	message = "speed:";
+	message = "dist:";
 	display_string(message);
 	display_int(speedLCD, 4);
+
+	display_goto_xy(0, line++);
+	message = "distEst:";
+	display_string(message);
+	display_int(diradjLCD, 4);
 
 	display_goto_xy(0, line++);
 	message = "dev speed:";
 	display_string(message);
 	display_int(devspeedLCD, 4);
-
-	display_goto_xy(0, line++);
-	message = "dir dev:";
-	display_string(message);
-	display_int(diradjLCD, 4);
 
 	display_goto_xy(0, line++);
 	message = "left motor:";
