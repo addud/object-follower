@@ -61,6 +61,10 @@ void ecrobot_device_terminate() {
 	term_nxtcam(PORT_CAMERA);
 }
 
+/* We use a timer for scheduling tasks, so we need to have an ISR handler, even if empty. */
+void user_1ms_isr_type2(void) {
+}
+
 /* Acquire data from sensors */
 TASK(AcquisitionTask) {
 
