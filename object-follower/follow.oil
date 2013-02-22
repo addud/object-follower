@@ -24,6 +24,13 @@ CPU ATMEL_AT91SAM7S256
 	RESOURCEPROPERTY = STANDARD;
   };
 
+  COUNTER SysTimerCnt
+  {
+    MINCYCLE = 1;
+    MAXALLOWEDVALUE = 10000;
+    TICKSPERBASE = 1; /* One tick is equal to 1msec */
+  };
+  
 
   ALARM cyclic_acquisition_alarm_30ms
   {
