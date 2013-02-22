@@ -11,16 +11,6 @@
 #define PORT_MOTOR_RIGHT		NXT_PORT_A
 #define PORT_MOTOR_STEERING		NXT_PORT_C
 
-#define TRANSMITION_FACTOR  2.5
-
-#define DKp 	1
-#define DKd 	0
-#define DKi 	0
-
-#define LKp		0.1		//G:0.15
-#define LKd		0.25		//G:0.15
-#define LKi		0.04//1//2  	//G:0.0
-
 //Controls how big the steering difference can be
 #define STEERING_LIMIT		30
 
@@ -28,12 +18,6 @@
 //Controlling how much each of the PID parts are allowed to contribute
 #define allowedI 10.0
 #define allowedD 20
-
-#define CKp		0.00002
-
-#define SLOWDOWN_POINT		20//20
-#define BRAKE_POINT			30//30
-#define DISTANCE_REF 		(SLOWDOWN_POINT + BRAKE_POINT)
 
 #define LIGHT_REF			g_blur_ref
 #define LIGHT_MAX			(g_blur_ref - interval_calib)
@@ -44,14 +28,7 @@
 
 #define BLURLIMIT			5			//G:5
 
-#define STEERING_SPEED		30			//G:58
 #define SPEED_REF			speed_ref 	// G:-75
-#define SPEED_ZERO			60
-//#define MAXSPEED			45
-#define INFINITE_DISTANCE_BUFFER_LENGTH 	4
-#define INFINITE_DISTANCE					255
-
-#define LIMIT_REDUCTION		30000
 
 #define TURN_RIGHT		1
 #define TURN_LEFT		0
@@ -61,84 +38,29 @@
 #define ABS(x)           (((x) < 0) ? -(x) : (x))
 
 /*Declaring the timer counter*/
-DeclareCounter( SysTimerCnt);
+DeclareCounter(SysTimerCnt);
 
 /*Declaring all tasks*/
-DeclareTask( ButtonTask);
-DeclareTask( IdleTask);
-DeclareTask( LightTask);
+DeclareTask(CalibrationTask);
+DeclareTask(ControlTask);
+DeclareTask(DisplayTask);
 
 static float lightValue;
 static float lightD = 0;
-static float oldLightP = 0;
 static float lastLightPValue = 0;
 static float maxLightP = 0;
-static float oldLightValue = 0;
 static int derivCounter = 0;
-static int oldLightCounter = 0;
 static U8 turn;
-static S16 revolution, speed_ref = 65;
-static U16 g_white_ref = 514, g_black_ref = 603, g_blur_ref = 555,
+static S16 revolution;
+/* Default calibration values */
+static U16 speed_ref = 65, g_white_ref = 514, g_black_ref = 603, g_blur_ref = 555,
 		interval_calib = 100;
-
-U8 brakespd;
 
 static U8 startCalibration = FALSE;
 
 // global variables used to display information
-S16 DpartLCD, distanceLCD, buttonLCD, IpartLCD, correctionLCD, bufferLCD,
-		angleLCD, turnLCD, lightLCD, lighterrorLCD;
+S16 DpartLCD, IpartLCD, lighterrorLCD;
 char *calibrationLCD;
-
-void display_values(void) {
-	char *message = NULL;
-	U8 line = 0;
-
-	//Display
-	display_clear(1);
-	display_goto_xy(0, line++);
-	message = "Calib ";
-	display_string(message);
-	display_string(calibrationLCD);
-
-	display_goto_xy(0, line++);
-	message = "Revolut: ";
-	display_string(message);
-	display_int(revolution, 4); // display speed
-
-	display_goto_xy(0, line++);
-	message = "light: ";
-	display_string(message);
-	display_int(lighterrorLCD, 4); // display light value
-
-	display_goto_xy(0, line++);
-	message = "lightD: ";
-	display_string(message);
-	display_int(DpartLCD, 4); //Display D part of PID
-	
-	display_goto_xy(0, line++);
-	message = "lightP: ";
-	display_string(message);
-	display_int(IpartLCD, 4); // display I part of PID
-
-	display_goto_xy(0, line++);
-	message = "BLUR: ";
-	display_string(message);
-	display_int(g_blur_ref, 4);
-
-	display_goto_xy(0, line++);
-	message = "WHITE: ";
-	display_string(message);
-	display_int(g_white_ref, 4); // display distance
-
-	display_goto_xy(0, line++);
-	message = "BLACK: ";
-	display_string(message);
-	display_int(g_black_ref, 4); // display distance
-
-	display_update();
-
-}
 
 /*Light sensor commands*/
 void ecrobot_device_initialize() {
@@ -159,24 +81,23 @@ void ecrobot_device_terminate() {
 /*Initializing counter*/
 void user_1ms_isr_type2(void) {
 	if (startCalibration == FALSE) {
+		//We release the counter only when calibration is finished
 		(void) SignalCounter(SysTimerCnt);
 	}
 }
 
-//Used by LightTask and ButtonTask
 void WheelsControl(S8 spd, U8 brake, S16 revolution) {
-	
-	//Added SPEED_REF instead of 68, and changed the sign of it in ButtonTask
-	
-	//For going straight
-	//nxt_motor_set_speed(PORT_MOTOR_RIGHT, SPEED_REF + 2, brake);
-	//nxt_motor_set_speed(PORT_MOTOR_LEFT, SPEED_REF, brake);
-	
-	
 	nxt_motor_set_speed(PORT_MOTOR_RIGHT, SPEED_REF + revolution, brake);
 	nxt_motor_set_speed(PORT_MOTOR_LEFT, SPEED_REF - revolution, brake);
 }
 
+/*********** Functions used by the Control Task **************/
+
+#define LKp		0.1
+#define LKd		0.25
+#define LKi		0.04
+
+/* Implementation of the PID algorithm based on the readings from the light sensor */
 void LightPID(U16 lightValue) {
 	
 	static float lightI;
@@ -196,7 +117,6 @@ void LightPID(U16 lightValue) {
 	} else {
 		turn = TURN_LEFT;
 	}
-	turnLCD = turn;
 	
 	/*
 	//Derivative part with limitation
@@ -231,7 +151,7 @@ void LightPID(U16 lightValue) {
 	}
 
 	//Only accumulate enough so that the I part never inlficts
-	//more than allowedI to PID
+	//more than allowed I to PID
 	if (ABS(lightI + lightP/200) < allowedI/LKi) {
 			lightI = lightI + lightP/200;
 	}
@@ -245,38 +165,27 @@ void LightPID(U16 lightValue) {
 	if (revolution < -STEERING_LIMIT) {
 		revolution = -STEERING_LIMIT;
 	}
-
-	angleLCD = revolution;
-
-	if (oldLightCounter == 19) {	
-		oldLightP = lightP;
-		oldLightCounter = 0;
-	}
-	else {
-		oldLightCounter++;
-	}
 	
 	DpartLCD = lightD * LKd;
 	IpartLCD = lightP * LKp;
 
 }
 
-TASK(LightTask)
+/* Task controlling the robot.
+ * Task does the data acquisition from the light sensor, applies the PID control
+ * and outputs the corresponding speed to the motors.
+ */
+TASK(ControlTask)
 {
-	
 	//read the light value
 	lightValue = ecrobot_get_light_sensor(PORT_LIGHT_SENSOR);
 	
-	if (oldLightValue == 0) {
-		oldLightValue = lightValue;
-	}
-
 	// min & max values
-	if(lightValue > LIGHT_MIN) // dark line treshold
+	if(lightValue > LIGHT_MIN) // dark line threshold
 	{
 		lightValue = LIGHT_MIN;
 	}
-	else if(lightValue < LIGHT_MAX) // white reflaction treshold
+	else if(lightValue < LIGHT_MAX) // white reflection treshold
 	{
 		lightValue = LIGHT_MAX;
 	}
@@ -290,7 +199,6 @@ TASK(LightTask)
 	{
 		;
 	}
-	lightLCD = lightValue;
 
 	LightPID(lightValue);
 
@@ -299,10 +207,75 @@ TASK(LightTask)
 	TerminateTask();
 }
 
+/*********** Functions used by the Display Task **************/
 
-TASK(ButtonTask)
+void display_values(void) {
+	char *message = NULL;
+	U8 line = 0;
+
+	//Display
+	display_clear(1);
+	display_goto_xy(0, line++);
+	message = "Calib ";
+	display_string(message);
+	display_string(calibrationLCD);
+
+	display_goto_xy(0, line++);
+	message = "Revolut: ";
+	display_string(message);
+	display_int(revolution, 4); // display speed
+
+	display_goto_xy(0, line++);
+	message = "light: ";
+	display_string(message);
+	display_int(lighterrorLCD, 4); // display light value
+
+	display_goto_xy(0, line++);
+	message = "lightD: ";
+	display_string(message);
+	display_int(DpartLCD, 4); //Display D part of PID
+
+	display_goto_xy(0, line++);
+	message = "lightP: ";
+	display_string(message);
+	display_int(IpartLCD, 4); // display I part of PID
+
+	display_goto_xy(0, line++);
+	message = "BLUR: ";
+	display_string(message);
+	display_int(g_blur_ref, 4);
+
+	display_goto_xy(0, line++);
+	message = "WHITE: ";
+	display_string(message);
+	display_int(g_white_ref, 4); // display distance
+
+	display_goto_xy(0, line++);
+	message = "BLACK: ";
+	display_string(message);
+	display_int(g_black_ref, 4); // display distance
+
+	display_update();
+}
+
+/*Display useful information on the screen*/
+TASK(DisplayTask)
 {
+	display_values();
+	TerminateTask();
+}
 
+/* This task allows the user to calibrate the data acquisition at startup */
+/* The software enters calibration mode only when it is started up with the button pressed
+ * Calibration is implemented as a sequence of states, and the user moves through
+ * the different calibration states by pressing a button.
+ * First he needs to calibrate the sensor for the three shades of colour the robot
+ * might encounter: WHITE, BLACK and BLUR.
+ * Then he needs to choose the maximum speed the robot can do.
+ * Initial state is calibration for WHITE.
+ */
+TASK(CalibrationTask)
+{
 	static U8 old_touch_state = 1;
 	static enum
 	{
@@ -338,7 +311,6 @@ TASK(ButtonTask)
 		}
 
 		light_value = ecrobot_get_light_sensor(PORT_LIGHT_SENSOR);
-		lightLCD = light_value;
 
 		if(cur_touch_state > old_touch_state)
 		{
@@ -346,12 +318,12 @@ TASK(ButtonTask)
 			{
 				case WHITE:
 				g_white_ref = light_value + WHITE_MARGIN;
-				calibration_state = BLACK;
+				calibration_state = BLACK; // go to BLACK state
 				calibrationLCD = "BLACK";
 				break;
 				case BLACK:
 				g_black_ref = light_value - BLACK_MARGIN;
-				calibration_state = BLUR;
+				calibration_state = BLUR; // go to BLUR state
 				calibrationLCD = "BLUR";
 				break;
 				case BLUR:
@@ -419,14 +391,7 @@ TASK(ButtonTask)
 		systick_wait_ms(10);
 
 	}
+	//Start the robot with the default speed. It will be adjusted by the Control Task later
 	WheelsControl(0,0,0);
-	TerminateTask();
-}
-
-/*Display several information in the screen*/
-TASK(IdleTask)
-{
-	display_values();
-
 	TerminateTask();
 }

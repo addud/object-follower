@@ -31,12 +31,12 @@ CPU ATMEL_AT91SAM7S256
   };
 
   
-  ALARM cyclic_light_alarm_5ms
+  ALARM cyclic_control_alarm_5ms
   {
     COUNTER = SysTimerCnt;
     ACTION = ACTIVATETASK
     {
-        TASK = LightTask;
+        TASK = ControlTask;
     };
     
   AUTOSTART = TRUE
@@ -47,12 +47,12 @@ CPU ATMEL_AT91SAM7S256
     };
   };
   
-  ALARM cyclic_idle_alarm_100ms
+  ALARM cyclic_display_alarm_100ms
   {
     COUNTER = SysTimerCnt;
     ACTION = ACTIVATETASK
     {
-        TASK = IdleTask;
+        TASK = DisplayTask;
     };
     
   AUTOSTART = TRUE
@@ -63,7 +63,7 @@ CPU ATMEL_AT91SAM7S256
     };
   };
 
-  TASK LightTask
+  TASK ControlTask
   {
     AUTOSTART = FALSE;
     PRIORITY = 5; /* Smaller value means lower priority */
@@ -72,7 +72,7 @@ CPU ATMEL_AT91SAM7S256
     STACKSIZE = 512; /* Stack size */
   };
 
-  TASK ButtonTask
+  TASK CalibrationTask
   {
     AUTOSTART = TRUE
     {
@@ -85,7 +85,7 @@ CPU ATMEL_AT91SAM7S256
     STACKSIZE = 512; /* Stack size */
   };
 
-  TASK IdleTask
+  TASK DisplayTask
   {
     AUTOSTART = FALSE;
     PRIORITY = 1; /* Smaller value means lower priority */
